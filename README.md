@@ -1,6 +1,6 @@
 # MoodleDesk
 
-A native, cross-platform desktop client for [Moodle](https://moodle.org), built with [Tauri v2](https://tauri.app) and React. It talks to your institution's Moodle through the official mobile web service API, so it has its own UI. It is not a browser wrapper around the Moodle website.
+A native, cross-platform desktop client for [Moodle](https://moodle.org), built with [Tauri v2](https://tauri.app) and React. It talks to your institution's Moodle through the official mobile web service API, so it has its own UI. It is NOT a browser wrapper around the Moodle website.
 
 Runs on **Linux, Windows and macOS**. (Mobile is covered by the official Moodle app.)
 
