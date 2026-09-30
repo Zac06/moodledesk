@@ -4,6 +4,10 @@ A native, cross-platform desktop client for [Moodle](https://moodle.org), built 
 
 Runs on **Linux, Windows and macOS**. (Mobile is covered by the official Moodle app.)
 
+## Screenshot
+
+![](assets/screenshot.png)
+
 ## Features
 
 - **Connect to any Moodle site** by entering its address.
@@ -28,7 +32,7 @@ React UI  --invoke-->  Rust (Tauri commands)  --HTTPS-->  Moodle web service API
 ## Requirements on the Moodle side
 
 - The site must have the **mobile web service enabled** (if the official Moodle app works with it, this is already the case).
-- For SSO, the site's *Type of login* setting (Mobile authentication) must be **"Via a browser window"**. The "embedded browser" mode is not supported.
+- For SSO, the site's _Type of login_ setting (Mobile authentication) must be **"Via a browser window"**. The "embedded browser" mode is not supported.
 - Some functions may be restricted by the site's administrators. In that case the app shows an error message.
 
 ## Development
@@ -69,11 +73,11 @@ npm run tauri build
 
 Installers are written to `src-tauri/target/release/bundle/`:
 
-| OS      | Output                          |
-|---------|---------------------------------|
-| Linux   | `.deb`, `.rpm`, `.AppImage`     |
-| Windows | `.msi`, `-setup.exe`            |
-| macOS   | `.app`, `.dmg`                  |
+| OS      | Output                      |
+| ------- | --------------------------- |
+| Linux   | `.deb`, `.rpm`, `.AppImage` |
+| Windows | `.msi`, `-setup.exe`        |
+| macOS   | `.app`, `.dmg`              |
 
 Tauri builds for the OS it runs on, so build each platform on its own OS or use CI. For macOS builds:
 
@@ -108,14 +112,14 @@ moodledesk/
 
 ### Tauri commands
 
-| Command          | Purpose                                                        |
-|------------------|----------------------------------------------------------------|
-| `resolve_site`   | Normalise the URL and fetch the site's public mobile config    |
-| `start_sso`      | Open the browser-based SSO login                               |
-| `login_password` | Username/password login through `login/token.php`              |
-| `ws_call`        | Generic Moodle web-service call                                |
-| `download_file`  | Download a file (token added in Rust), then open it            |
-| `get_session` / `logout` | Restore or clear the session in the OS keychain        |
+| Command                  | Purpose                                                     |
+| ------------------------ | ----------------------------------------------------------- |
+| `resolve_site`           | Normalise the URL and fetch the site's public mobile config |
+| `start_sso`              | Open the browser-based SSO login                            |
+| `login_password`         | Username/password login through `login/token.php`           |
+| `ws_call`                | Generic Moodle web-service call                             |
+| `download_file`          | Download a file (token added in Rust), then open it         |
+| `get_session` / `logout` | Restore or clear the session in the OS keychain             |
 
 ## Known limitations
 
