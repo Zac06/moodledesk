@@ -5,8 +5,9 @@ export type Info = { userid: number; fullname: string; sitename: string };
 export type Filter = "all" | "inprogress" | "future" | "past" | "favourites" | "hidden";
 export type Course = { id: number; fullname: string; shortname: string; progress?: number | null; courseimage?: string; isfavourite?: boolean; hidden?: boolean };
 export type FileItem = { type: string; filename: string; fileurl: string; filesize: number };
-export type Module = { id: number; name: string; modname: string; url?: string; description?: string; contents?: FileItem[] };
-export type Section = { id: number; name: string; summary?: string; modules: Module[] };
+export type Module = { id: number; name: string; modname: string; instance?: number; url?: string; description?: string; contents?: FileItem[] };
+// component/itemid are set on sections that belong to a subsection activity (Moodle 4.5+)
+export type Section = { id: number; name: string; summary?: string; component?: string | null; itemid?: number | null; modules: Module[] };
 
 export const resolveSite = (input: string) => invoke<{ site: string; config: any }>("resolve_site", { input });
 export const startSso = (site: string) => invoke<void>("start_sso", { site });
@@ -59,10 +60,7 @@ export const coursesByCategory = async (id: number) =>
   (await ws<{ courses: SearchCourse[] }>("core_course_get_courses_by_field", { field: "category", value: String(id) })).courses;
 export const enrolMethods = (id: number) => ws<EnrolMethod[]>("core_enrol_get_course_enrolment_methods", { courseid: String(id) });
 export const selfEnrol = (courseid: number, instanceid: number, password: string) =>
-  ws<{ status: boolean; warnings?: { message: string }[] }>("enrol_self_enrol_user",
+  ws<{ status: boolean; warnings?: { message: string; warningcode?: string }[] }>("enrol_self_enrol_user",
     { courseid: String(courseid), instanceid: String(instanceid), ...(password ? { password } : {}) });
 // every course the user is enrolled in, including hidden ones (the timeline "all" view omits them)
 export const enrolledCourses = (uid: number) => ws<{ id: number }[]>("core_enrol_get_users_courses", { userid: String(uid) });
-// "enrolpassword" is present in the instance info only when that self-enrolment needs a key
-export const selfInstanceInfo = (instanceid: number) =>
-  ws<{ instanceinfo?: { enrolpassword?: string } }>("enrol_self_get_instance_info", { instanceid: String(instanceid) });

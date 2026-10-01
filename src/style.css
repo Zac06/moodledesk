@@ -55,3 +55,6 @@ nav{display:flex;flex-direction:column;gap:4px}
 .fields{display:grid;grid-template-columns:repeat(3,1fr) auto;gap:10px}.fields input{max-width:none}
 @media(max-width:900px){.fields{grid-template-columns:1fr}}
 .method{padding:12px 0;border-top:1px solid var(--line)}.method:first-child{border-top:0;padding-top:0}.method h4{margin:0 0 8px;font-size:15px;font-weight:600}
+.enrolerr{margin-top:10px;padding:10px 12px;border-radius:10px;background:#e11d4818;border:1px solid #e11d4855;font-size:13px}.enrolerr p{margin:0 0 4px;color:#e11d48;word-break:break-word}.enrolerr .ghost{padding:4px 0;text-align:left}
+.subsec{margin:6px 12px 12px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--bg)}
+.subsec .sechead{font-size:14px;padding:11px 14px}.subsec .item:first-of-type{border-top:1px solid var(--line)}

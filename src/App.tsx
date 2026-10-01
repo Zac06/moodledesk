@@ -97,25 +97,42 @@ function CourseView({ c, site, token, ensureDir, notify, onLink }: { c: api.Cour
     <div className="sec pad"><p>This course can't be shown in the app (you may not be enrolled).</p><small>{err}</small><br />
       <button className="primary" onClick={() => api.openWeb(`${site}/course/view.php?id=${c.id}`)}>Open in browser</button></div>);
   if (!secs) return <div className="muted pad">Loading course…</div>;
-  return (<div className="stack">{secs.filter((s) => s.modules.length || hasContent(s.summary)).map((s) => (
+  // Moodle 4.5+ subsections: the activity sits in its parent section, its content is an extra
+  // "delegated" section at the end of the list. Nest it back in place instead of listing it separately.
+  const delegated = new Map<number, api.Section>();
+  secs.forEach((x) => { if (x.component === "mod_subsection" && x.itemid != null) delegated.set(x.itemid, x); });
+  const toggle = (id: number) => setClosed({ ...closed, [id]: !closed[id] });
+  const renderMods = (mods: api.Module[]): React.ReactNode => mods.map((m) => {
+    if (m.modname === "label") return hasContent(m.description) ? <div className="summary" key={m.id}><Html html={m.description!} token={token} onLink={onLink} /></div> : null;
+    if (m.modname === "subsection") {
+      const d = m.instance != null ? delegated.get(m.instance) : undefined;
+      if (d) return (
+        <div className="subsec" key={m.id}>
+          <button className="sechead" onClick={() => toggle(d.id)}><span>{m.name || d.name}</span><span className={closed[d.id] ? "chev shut" : "chev"}><Icon n="chev" /></span></button>
+          {!closed[d.id] && <>
+            {hasContent(d.summary) && <div className="summary"><Html html={d.summary!} token={token} onLink={onLink} /></div>}
+            {renderMods(d.modules)}
+          </>}
+        </div>);
+    }
+    const files = (m.contents ?? []).filter((f) => f.type === "file");
+    if (files.length) return files.map((f) => (
+      <button className="item" key={m.id + f.filename} onClick={() => getFile(f)}>
+        <span className="ico"><Icon n={modIcon(m.modname)} /></span><span className="grow">{m.modname === "folder" ? `${m.name} / ${f.filename}` : m.name}<small>{f.filename} · {size(f.filesize)}</small></span><Icon n="down" />
+      </button>));
+    const isUrl = m.modname === "url"; const target = isUrl ? m.contents?.[0]?.fileurl ?? m.url : m.url;
+    return (
+      <button className="item" key={m.id} onClick={() => target && onLink(target)}>
+        <span className="ico"><Icon n={modIcon(m.modname)} /></span><span className="grow">{m.name}<small>{isUrl ? "link" : m.modname + " · opens in browser"}</small></span><Icon n="link" s={16} />
+      </button>);
+  });
+  return (<div className="stack">{secs.filter((s) => !s.component && (s.modules.length || hasContent(s.summary))).map((s) => (
     <section className="sec" key={s.id}>
-      <button className="sechead" onClick={() => setClosed({ ...closed, [s.id]: !closed[s.id] })}>
+      <button className="sechead" onClick={() => toggle(s.id)}>
         <span>{s.name || "General"}</span><span className={closed[s.id] ? "chev shut" : "chev"}><Icon n="chev" /></span>
       </button>
       {!closed[s.id] && hasContent(s.summary) && <div className="summary"><Html html={s.summary!} token={token} onLink={onLink} /></div>}
-      {!closed[s.id] && s.modules.map((m) => {
-        if (m.modname === "label") return hasContent(m.description) ? <div className="summary" key={m.id}><Html html={m.description!} token={token} onLink={onLink} /></div> : null;
-        const files = (m.contents ?? []).filter((f) => f.type === "file");
-        if (files.length) return files.map((f) => (
-          <button className="item" key={m.id + f.filename} onClick={() => getFile(f)}>
-            <span className="ico"><Icon n={modIcon(m.modname)} /></span><span className="grow">{m.modname === "folder" ? `${m.name} / ${f.filename}` : m.name}<small>{f.filename} · {size(f.filesize)}</small></span><Icon n="down" />
-          </button>));
-        const isUrl = m.modname === "url"; const target = isUrl ? m.contents?.[0]?.fileurl ?? m.url : m.url;
-        return (
-          <button className="item" key={m.id} onClick={() => target && onLink(target)}>
-            <span className="ico"><Icon n={modIcon(m.modname)} /></span><span className="grow">{m.name}<small>{isUrl ? "link" : m.modname + " · opens in browser"}</small></span><Icon n="link" s={16} />
-          </button>);
-      })}
+      {!closed[s.id] && renderMods(s.modules)}
     </section>))}</div>);
 }
 
@@ -127,6 +144,7 @@ function Explore({ site, token, enrolled, notify, onLink, onJoined }: { site: st
   const [res, setRes] = useState<api.SearchCourse[] | null>(null); const [busy, setBusy] = useState(false); const [note, setNote] = useState("");
   const [sel, setSel] = useState<api.SearchCourse | null>(null); const [methods, setMethods] = useState<api.EnrolMethod[] | null>(null);
   const [keys, setKeys] = useState<Record<number, string>>({}); const [joining, setJoining] = useState<number | null>(null);
+  const [errs, setErrs] = useState<Record<number, string>>({});
   const [cats, setCats] = useState<Map<number, api.Category>>(new Map());
   useEffect(() => { api.categories().then((l) => setCats(new Map(l.map((c) => [c.id, c])))).catch(() => {}); }, []);
 
@@ -158,7 +176,7 @@ function Explore({ site, token, enrolled, notify, onLink, onJoined }: { site: st
     } catch (e) { notify(String(e)); }
     setBusy(false);
   };
-  const choose = (c: api.SearchCourse) => { setSel(c); setMethods(null); setKeys({}); api.enrolMethods(c.id).then(setMethods).catch(() => setMethods([])); };
+  const choose = (c: api.SearchCourse) => { setSel(c); setMethods(null); setKeys({}); setErrs({}); api.enrolMethods(c.id).then(setMethods).catch(() => setMethods([])); };
   // like Moodle's own "Enrolment options" page: one block per enabled method
   const enabled = (methods ?? []).filter((m) => String(m.status) === "true");
   const selfs = enabled.filter((m) => m.type === "self");
@@ -168,12 +186,12 @@ function Explore({ site, token, enrolled, notify, onLink, onJoined }: { site: st
   const asCourse = (c: api.SearchCourse): api.Course => ({ id: c.id, fullname: c.fullname, shortname: c.shortname });
   const join = async (m: api.EnrolMethod) => {
     if (!sel) return;
-    setJoining(m.id);
+    setJoining(m.id); setErrs((x) => ({ ...x, [m.id]: "" }));
     try {
       const r = await api.selfEnrol(sel.id, m.id, keys[m.id] ?? "");
-      if (!r.status) throw new Error(r.warnings?.[0]?.message ?? "Enrolment was refused");
+      if (!r.status) { const w = r.warnings?.[0]; throw new Error(w ? `${w.message}${w.warningcode ? ` [${w.warningcode}]` : ""}` : "Enrolment was refused"); }
       notify("Enrolled in " + sel.fullname); onJoined(asCourse(sel));
-    } catch (e) { notify(String(e).replace(/^Error: /, "")); }
+    } catch (e) { setErrs((x) => ({ ...x, [m.id]: String(e).replace(/^Error: /, "") })); }
     setJoining(null);
   };
   if (sel) return (
@@ -193,11 +211,14 @@ function Explore({ site, token, enrolled, notify, onLink, onJoined }: { site: st
                   <div className="joinrow">
                     <input type="password" placeholder="Enrolment key (if required)" value={keys[m.id] ?? ""} onChange={(e) => setKeys({ ...keys, [m.id]: e.target.value })} onKeyDown={(e) => e.key === "Enter" && join(m)} />
                     <button className="primary sm" disabled={joining !== null} onClick={() => join(m)}>{joining === m.id ? "Enrolling…" : "Enrol me"}</button>
-                  </div></div>))}
+                  </div>
+                  {errs[m.id] && <div className="enrolerr"><p>{errs[m.id]}</p><button className="ghost" onClick={() => api.openWeb(`${site}/enrol/index.php?id=${sel.id}`)}>Try in browser instead</button></div>}
+                </div>))}
               {others.map((m) => (
                 <div className="method" key={m.id}><h4>{m.name || m.type}</h4><small className="muted" style={{ marginBottom: 8 }}>custom method · {m.type}{m.wsfunction ? ` · ${m.wsfunction}` : ""}</small>
                   <button className="primary sm" onClick={() => api.openWeb(`${site}/enrol/index.php?id=${sel.id}`)}>Enrol in browser</button></div>))}
             </div>)}
+          {methods && methods.length > 0 && !enrolled.has(sel.id) && <small className="muted" style={{ marginTop: 10 }}>Reported by Moodle: {methods.map((m) => `${m.name || m.type} [${m.type}${String(m.status) === "true" ? "" : ", disabled"}${m.wsfunction ? ", " + m.wsfunction : ""}]`).join(" · ")}</small>}
           <button className="ghost" onClick={() => api.openWeb(`${site}/course/view.php?id=${sel.id}`)}>Open in browser</button>
         </div>
       </section>
