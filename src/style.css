@@ -44,3 +44,14 @@ main{overflow:auto;padding:28px 36px}.bar{display:flex;align-items:center;gap:12
 .html>:first-child{margin-top:12px}.html>:last-child{margin-bottom:0}.html p{margin:8px 0}.html img{max-width:100%;height:auto;border-radius:8px}
 .html a{color:var(--acc);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .html table{border-collapse:collapse;max-width:100%}.html td,.html th{border:1px solid var(--line);padding:6px 10px}
+
+.update{position:fixed;right:24px;bottom:24px;display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:14px;padding:12px 14px;box-shadow:0 12px 32px #0004;max-width:400px;font-size:14px}
+.primary.sm{padding:8px 14px}
+
+.joinrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.joinrow input{max-width:280px}.search.wide{max-width:420px}
+.summary .ghost{display:inline-block;margin-top:10px;padding:8px 0}
+nav{display:flex;flex-direction:column;gap:4px}
+.tagline{color:var(--acc)!important;font-weight:600}
+.fields{display:grid;grid-template-columns:repeat(3,1fr) auto;gap:10px}.fields input{max-width:none}
+@media(max-width:900px){.fields{grid-template-columns:1fr}}
+.method{padding:12px 0;border-top:1px solid var(--line)}.method:first-child{border-top:0;padding-top:0}.method h4{margin:0 0 8px;font-size:15px;font-weight:600}
