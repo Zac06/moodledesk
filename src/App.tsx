@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import DOMPurify from "dompurify";
 import { listen } from "@tauri-apps/api/event";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import { open } from "@tauri-apps/plugin-dialog";
 import * as api from "./api";
 
@@ -19,6 +18,8 @@ const P: Record<string, string> = {
   dots: "M12 12h.01 M19 12h.01 M5 12h.01",
   x: "M18 6L6 18 M6 6l12 12",
   search: "M21 21l-4.35-4.35 M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z",
+  sliders: "M4 21v-7 M4 10V3 M12 21v-9 M12 8V3 M20 21v-5 M20 12V3 M1 14h6 M9 8h6 M17 16h6",
+  trash: "M3 6h18 M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6 M10 11v6 M14 11v6 M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2",
   star: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z",
   eyeoff: "M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94 M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19 M1 1l22 22",
   eye: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z",
@@ -69,7 +70,7 @@ function Login({ onDone }: { onDone: () => void }) {
         </>)}
         {site && <button className="ghost" onClick={() => { setSite(null); setMsg(""); }}>Use a different site</button>}
         {msg && <p className="msg">{msg}</p>}
-        {site && sso && msg && <button className="ghost" onClick={() => openUrl(`${site.site}/login/logout.php`)}>Browser says "guests are not allowed"? Reset its Moodle session</button>}
+        {site && sso && msg && <button className="ghost" onClick={() => api.openExternal(`${site.site}/login/logout.php`)}>Browser says "guests are not allowed"? Reset its Moodle session</button>}
       </div>
     </div>
   );
@@ -85,13 +86,22 @@ function Html({ html, token, onLink }: { html: string; token: string; onLink: (h
     onClick={(e) => { const a = (e.target as HTMLElement).closest("a"); if (!a) return; e.preventDefault(); const h = a.getAttribute("href"); if (h) onLink(h); }} />;
 }
 
-function CourseView({ c, site, token, ensureDir, notify, onLink }: { c: api.Course; site: string; token: string; ensureDir: () => Promise<string | null>; notify: (m: string) => void; onLink: (href: string) => void }) {
+function CourseView({ c, site, token, ensureDir, notify, onLink, dlMode }: { c: api.Course; site: string; token: string; ensureDir: () => Promise<string | null>; notify: (m: string) => void; onLink: (href: string) => void; dlMode: api.DlMode }) {
   const [secs, setSecs] = useState<api.Section[] | null>(null); const [err, setErr] = useState(""); const [closed, setClosed] = useState<Record<number, boolean>>({});
   useEffect(() => { setSecs(null); setErr(""); api.courseContents(c.id).then(setSecs).catch((e) => setErr(String(e))); }, [c.id]);
-  const getFile = async (f: api.FileItem) => {
-    const dir = await ensureDir(); if (!dir) return;
-    notify("Downloading " + f.filename + "…");
-    try { await api.download(f.fileurl, dir, c.shortname || c.fullname, f.filename); notify("Opened " + f.filename); } catch (e) { notify("Download failed: " + e); }
+  const course = c.shortname || c.fullname;
+  const [saved, setSaved] = useState<Set<string>>(new Set()); const [menu, setMenu] = useState<{ f: api.FileItem; x: number; y: number } | null>(null);
+  const refreshSaved = () => api.listDownloads().then((l) => setSaved(new Set(l.map((e) => e.course + "::" + e.name)))).catch(() => {});
+  useEffect(() => { refreshSaved(); }, []);
+  useEffect(() => { const h = () => setMenu(null); window.addEventListener("click", h); return () => window.removeEventListener("click", h); }, []);
+  const getFile = async (f: api.FileItem, force = false) => {
+    setMenu(null);
+    const dir = (await ensureDir()) ?? "";   // empty = default folder; changing it is done in Settings
+    notify((force ? "Downloading " : "Opening ") + f.filename + "…");
+    try {
+      const r = await api.download(f.fileurl, dir, course, f.filename, dlMode, f.timemodified, force);
+      notify(r.reused ? "Opened saved copy of " + f.filename : "Downloaded " + f.filename); refreshSaved();
+    } catch (e) { notify("Download failed: " + e); }
   };
   if (err) return (
     <div className="sec pad"><p>This course can't be shown in the app (you may not be enrolled).</p><small>{err}</small><br />
@@ -116,10 +126,17 @@ function CourseView({ c, site, token, ensureDir, notify, onLink }: { c: api.Cour
         </div>);
     }
     const files = (m.contents ?? []).filter((f) => f.type === "file");
-    if (files.length) return files.map((f) => (
-      <button className="item" key={m.id + f.filename} onClick={() => getFile(f)}>
-        <span className="ico"><Icon n={modIcon(m.modname)} /></span><span className="grow">{m.modname === "folder" ? `${m.name} / ${f.filename}` : m.name}<small>{f.filename} · {size(f.filesize)}</small></span><Icon n="down" />
-      </button>));
+    if (files.length) return files.map((f) => {
+      const isSaved = saved.has(course + "::" + f.filename);
+      return (
+        <div className="item" role="button" key={m.id + f.filename} onClick={() => getFile(f)}>
+          <span className="ico"><Icon n={modIcon(m.modname)} /></span>
+          <span className="grow">{m.modname === "folder" ? `${m.name} / ${f.filename}` : m.name}<small>{f.filename} · {size(f.filesize)}{isSaved ? " · saved" : ""}</small></span>
+          {isSaved
+            ? <button className="icon" title="Options" onClick={(e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setMenu({ f, x: window.innerWidth - r.right, y: r.bottom + 4 }); }}><Icon n="dots" /></button>
+            : <Icon n="down" />}
+        </div>);
+    });
     const isUrl = m.modname === "url"; const target = isUrl ? m.contents?.[0]?.fileurl ?? m.url : m.url;
     return (
       <button className="item" key={m.id} onClick={() => target && onLink(target)}>
@@ -133,7 +150,10 @@ function CourseView({ c, site, token, ensureDir, notify, onLink }: { c: api.Cour
       </button>
       {!closed[s.id] && hasContent(s.summary) && <div className="summary"><Html html={s.summary!} token={token} onLink={onLink} /></div>}
       {!closed[s.id] && renderMods(s.modules)}
-    </section>))}</div>);
+    </section>))}
+    {menu && <div className="menu" style={{ position: "fixed", top: menu.y, right: menu.x }} onClick={(e) => e.stopPropagation()}>
+      <button onClick={() => getFile(menu.f, true)}><Icon n="down" s={16} />Download again</button></div>}
+  </div>);
 }
 
 const norm = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
@@ -250,9 +270,62 @@ function Explore({ site, token, enrolled, notify, onLink, onJoined }: { site: st
     </>);
 }
 
+const MODES: [api.DlMode, string, string][] = [
+  ["updated", "Re-download only if updated", "Reuse the saved copy unless the file changed on Moodle (recommended)."],
+  ["reuse", "Always use the saved copy", "Never download again once saved. Fastest, but can show an outdated file."],
+  ["always", "Always download again", "Fetch a fresh copy every time and overwrite the saved one."],
+];
+
+function Settings({ dir, pick, reset, mode, setMode, notify }: { dir: string | null; pick: () => Promise<string | null>; reset: () => void; mode: api.DlMode; setMode: (m: api.DlMode) => void; notify: (m: string) => void }) {
+  const [files, setFiles] = useState<api.DlEntry[] | null>(null); const [confirm, setConfirm] = useState<string | null>(null);
+  const reload = () => api.listDownloads().then(setFiles).catch(() => setFiles([]));
+  useEffect(() => { reload(); }, []);
+  const [def, setDef] = useState<string | null>(null); useEffect(() => { api.defaultDownloadDir().then(setDef).catch(() => {}); }, []);
+  const shownDir = dir ?? def;
+  const del = async (paths?: string[]) => { const n = await api.deleteDownloads(paths); notify(`Deleted ${n} file${n === 1 ? "" : "s"}`); setConfirm(null); reload(); };
+  const ask = (key: string, run: () => void) => { if (confirm === key) run(); else { setConfirm(key); setTimeout(() => setConfirm(null), 4000); } };
+  const byCourse = new Map<string, api.DlEntry[]>();
+  (files ?? []).forEach((f) => byCourse.set(f.course, [...(byCourse.get(f.course) ?? []), f]));
+  const sum = (l: api.DlEntry[]) => l.reduce((a, f) => a + f.size, 0);
+  const plural = (n: number) => `${n} file${n === 1 ? "" : "s"}`;
+  return (
+    <div className="stack">
+      <div className="bar"><h1>Settings</h1></div>
+      <section className="sec">
+        <div className="sechead static">Downloads</div>
+        <div className="setrow"><div className="grow"><b>Download folder</b><small>{shownDir ?? "…"}{!dir && shownDir ? " (default)" : ""}</small></div>
+          <button className="btn" onClick={() => pick()}>Change…</button>
+          {dir && <button className="btn" onClick={reset}>Use default</button>}
+          {shownDir && <button className="btn" onClick={() => api.openLocal(shownDir).catch(() => notify("That folder doesn't exist yet"))}>Open folder</button>}</div>
+        <div className="setrow col"><b>When a file is already saved</b>
+          <div className="choices">{MODES.map(([k, t, d]) => <button key={k} className={mode === k ? "choice on" : "choice"} onClick={() => setMode(k)}><b>{t}</b><small>{d}</small></button>)}</div></div>
+      </section>
+      <section className="sec">
+        <div className="sechead static"><span>Saved files</span><span className="muted">{files ? `${plural(files.length)} · ${size(sum(files))}` : ""}</span></div>
+        {files && !files.length && <div className="setrow muted">Nothing downloaded yet.</div>}
+        {[...byCourse].map(([course, list]) => (
+          <div key={course} className="coursegroup">
+            <div className="setrow"><div className="grow"><b>{course}</b><small>{plural(list.length)} · {size(sum(list))}</small></div>
+              <button className="btn danger" onClick={() => ask("c:" + course, () => del(list.map((f) => f.path)))}>{confirm === "c:" + course ? "Click to confirm" : "Clear course"}</button></div>
+            {list.map((f) => (
+              <div className="setrow file" key={f.path}>
+                <div className="grow">{f.name}<small>{size(f.size)} · {new Date(f.at * 1000).toLocaleDateString()}</small></div>
+                <button className="icon" title="Open" onClick={() => api.openLocal(f.path)}><Icon n="file" /></button>
+                <button className="icon" title="Delete" onClick={() => del([f.path])}><Icon n="trash" /></button>
+              </div>))}
+          </div>))}
+        {!!files?.length && <div className="setrow"><div className="grow muted">Only files MoodleDesk downloaded are listed or removed; anything else in your folder is never touched. Files saved by older versions aren't tracked.</div>
+          <button className="btn danger" onClick={() => ask("all", () => del())}>{confirm === "all" ? "Click to confirm" : "Delete all downloads"}</button></div>}
+      </section>
+    </div>);
+}
+
 export default function App() {
   const [session, setSession] = useState<api.Session | null | undefined>(undefined);
   const [info, setInfo] = useState<api.Info | null>(null); const [courses, setCourses] = useState<api.Course[]>([]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [dlMode, setDlMode] = useState<api.DlMode>((localStorage.getItem("dlMode") as api.DlMode) || "updated");
+  const changeMode = (m: api.DlMode) => { localStorage.setItem("dlMode", m); setDlMode(m); };
   const [explore, setExplore] = useState(false); const [enrolledIds, setEnrolledIds] = useState<Set<number>>(new Set());
   const [stack, setStack] = useState<api.Course[]>([]); const [q, setQ] = useState("");
   const open_ = stack[stack.length - 1] ?? null;
@@ -300,7 +373,8 @@ export default function App() {
     if (id) openCourseById(id); else api.openWeb(u.toString());
   };
   const pick = async () => { const p = await open({ directory: true, title: "Choose download folder" }); if (typeof p === "string") { localStorage.setItem("dlDir", p); setDir(p); return p; } return null; };
-  const ensureDir = async () => dir ?? pick();
+  const ensureDir = async () => dir ?? "";   // no prompt here: choose the folder in Settings (default: Downloads/MoodleDesk)
+  const resetDir = () => { localStorage.removeItem("dlDir"); setDir(null); };
 
   if (session === undefined) return null;
   if (!session) return <Login onDone={refresh} />;
@@ -310,11 +384,11 @@ export default function App() {
       <aside>
         <div className="brand"><div className="logo sm">M</div>MoodleDesk</div>
         <nav>
-          <button className={!explore ? "on" : ""} onClick={() => { setExplore(false); setOpen(null); }}><Icon n="book" />My courses</button>
-          <button className={explore ? "on" : ""} onClick={() => { setExplore(true); setOpen(null); }}><Icon n="search" />Explore</button>
+          <button className={!explore && !settingsOpen ? "on" : ""} onClick={() => { setExplore(false); setSettingsOpen(false); setOpen(null); }}><Icon n="book" />My courses</button>
+          <button className={explore ? "on" : ""} onClick={() => { setExplore(true); setSettingsOpen(false); setOpen(null); }}><Icon n="search" />Explore</button>
+          <button className={settingsOpen ? "on" : ""} onClick={() => { setSettingsOpen(true); setExplore(false); setOpen(null); }}><Icon n="sliders" />Settings</button>
         </nav>
         <div className="grow" />
-        <button className="folder" onClick={pick}><Icon n="folder" /><span><small>Download folder</small>{dir ? dir.split(/[\\/]/).pop() : "Not set — click to choose"}</span></button>
         <div className="user"><div className="avatar">{initials(info?.fullname ?? "?")}</div><span className="grow">{info?.fullname}</span>
           <button className="icon" title="Sign out" onClick={() => api.logout().then(() => { setOpen(null); refresh(); })}><Icon n="out" /></button></div>
       </aside>
@@ -322,10 +396,12 @@ export default function App() {
         {open_ ? (<>
           <div className="bar"><button className="icon" onClick={() => setStack(stack.slice(0, -1))}><Icon n="back" /></button><h1>{open_.fullname}</h1></div>
           <div className="banner" style={{ background: `linear-gradient(135deg,hsl(${hue(open_.id)} 70% 55%),hsl(${hue(open_.id) + 40} 70% 42%))` }}>{open_.shortname}</div>
-          <CourseView key={open_.id} c={open_} site={session.site} token={session.token} ensureDir={ensureDir} notify={notify} onLink={handleLink} />
+          <CourseView key={open_.id} dlMode={dlMode} c={open_} site={session.site} token={session.token} ensureDir={ensureDir} notify={notify} onLink={handleLink} />
         </>) : explore ? (
           <Explore site={session.site} token={session.token} enrolled={enrolledIds} notify={notify} onLink={handleLink}
             onJoined={(c) => { setExplore(false); setStack([c]); load(filter); }} />
+        ) : settingsOpen ? (
+          <Settings dir={dir} pick={pick} reset={resetDir} mode={dlMode} setMode={changeMode} notify={notify} />
         ) : (<>
           <div className="bar"><h1>My courses</h1><input className="search" placeholder="Search courses…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
           <div className="tabs">{FILTERS.map(([k, l]) => <button key={k} className={filter === k ? "tab on" : "tab"} onClick={() => setFilter(k)}>{l}</button>)}</div>
@@ -357,7 +433,7 @@ export default function App() {
       {update && (
         <div className="update">
           <div className="grow"><b>MoodleDesk {update.version} is available</b><small>A newer version has been released.</small></div>
-          <button className="primary sm" onClick={() => openUrl(update.url)}>Download</button>
+          <button className="primary sm" onClick={() => api.openExternal(update.url)}>Download</button>
           <button className="icon" title="Skip this version" onClick={() => { localStorage.setItem("skipVersion", update.version); setUpdate(null); }}><Icon n="x" /></button>
         </div>)}
       {toast && <div className="toast">{toast}</div>}

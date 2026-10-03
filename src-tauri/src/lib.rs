@@ -105,9 +105,7 @@ fn start_sso(app: AppHandle, state: State<AppState>, site: String) -> Result<(),
     let url = format!(
         "{site}/admin/tool/mobile/launch.php?service={SERVICE}&passport={passport}&urlscheme={SCHEME}"
     );
-    app.opener()
-        .open_url(url, None::<&str>)
-        .map_err(|e| e.to_string())
+    launch(&app, &url)
 }
 
 fn handle_url(app: &AppHandle, url: &str) {
@@ -212,6 +210,7 @@ async fn ws_call(
     form.insert("wstoken".into(), s.token);
     form.insert("wsfunction".into(), function);
     form.insert("moodlewsrestformat".into(), "json".into());
+    form.insert("moodlewssettingfilter".into(), "true".into()); // resolves multilingual names/summaries
     let v: Value = reqwest::Client::new()
         .post(format!("{}/webservice/rest/server.php", s.site))
         .form(&form)
@@ -223,13 +222,124 @@ async fn ws_call(
         .map_err(|e| e.to_string())?;
     if let Some(msg) = v.get("message").and_then(|m| m.as_str()) {
         if v.get("exception").is_some() {
-            return Err(msg.into());
+            let code = v.get("errorcode").and_then(|c| c.as_str()).unwrap_or("");
+            return Err(if code.is_empty() {
+                msg.to_string()
+            } else {
+                format!("{msg} [{code}]")
+            });
         }
     }
     Ok(v)
 }
 
-/// Downloads a Moodle file into <dir>/<subdir>/<filename>, then opens it with the OS default app.
+#[derive(Serialize, Deserialize, Clone)]
+struct DlEntry {
+    path: String,
+    course: String,
+    name: String,
+    size: u64,
+    at: u64,
+}
+
+fn manifest_path(app: &AppHandle) -> Option<std::path::PathBuf> {
+    let d = app.path().app_data_dir().ok()?;
+    std::fs::create_dir_all(&d).ok()?;
+    Some(d.join("downloads.json"))
+}
+fn load_manifest(app: &AppHandle) -> Vec<DlEntry> {
+    manifest_path(app)
+        .and_then(|p| std::fs::read_to_string(p).ok())
+        .and_then(|j| serde_json::from_str(&j).ok())
+        .unwrap_or_default()
+}
+fn save_manifest(app: &AppHandle, m: &[DlEntry]) {
+    if let Some(p) = manifest_path(app) {
+        if let Ok(j) = serde_json::to_string(m) {
+            let _ = std::fs::write(p, j);
+        }
+    }
+}
+fn now_secs() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
+}
+
+/// Opens a file path or web URL with the OS default handler.
+/// Inside an AppImage, AppRun puts the bundle's own libraries and data dirs into the environment. A viewer or
+/// browser started with that environment can fail on incompatible libraries (silently, since the launch itself
+/// succeeds), so on Linux we start xdg-open ourselves with the bundle's entries stripped out.
+fn launch(app: &AppHandle, target: &str) -> Result<(), String> {
+    #[cfg(target_os = "linux")]
+    {
+        use std::process::{Command, Stdio};
+        let mut cmd = Command::new("xdg-open");
+        cmd.arg(target)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null());
+        if let Some(dir) = std::env::var("APPDIR").ok().filter(|d| !d.is_empty()) {
+            for (k, v) in std::env::vars() {
+                if matches!(k.as_str(), "APPDIR" | "APPIMAGE" | "ARGV0" | "OWD") {
+                    cmd.env_remove(&k);
+                    continue;
+                }
+                if v.contains(&dir) {
+                    let kept: Vec<&str> = v
+                        .split(':')
+                        .filter(|p| !p.starts_with(dir.as_str()))
+                        .collect();
+                    if kept.is_empty() {
+                        cmd.env_remove(&k);
+                    } else {
+                        cmd.env(&k, kept.join(":"));
+                    }
+                }
+            }
+        }
+        if let Ok(mut child) = cmd.spawn() {
+            std::thread::spawn(move || {
+                let _ = child.wait();
+            });
+            return Ok(());
+        }
+    }
+    if target.starts_with("http://") || target.starts_with("https://") {
+        app.opener()
+            .open_url(target.to_string(), None::<&str>)
+            .map_err(|e| e.to_string())
+    } else {
+        app.opener()
+            .open_path(target.to_string(), None::<&str>)
+            .map_err(|e| e.to_string())
+    }
+}
+
+#[tauri::command]
+fn open_external(app: AppHandle, url: String) -> Result<(), String> {
+    if !(url.starts_with("https://") || url.starts_with("http://")) {
+        return Err("Only web links can be opened".into());
+    }
+    launch(&app, &url)
+}
+
+fn default_dir(app: &AppHandle) -> Result<std::path::PathBuf, String> {
+    app.path()
+        .download_dir()
+        .or_else(|_| app.path().home_dir())
+        .map(|p| p.join("MoodleDesk"))
+        .map_err(|e| e.to_string())
+}
+#[tauri::command]
+fn default_download_dir(app: AppHandle) -> Result<String, String> {
+    default_dir(&app).map(|p| p.to_string_lossy().to_string())
+}
+
+/// Saves a Moodle file to <dir>/<subdir>/<filename> and opens it with the OS default app.
+/// mode: "always" = download every time, "reuse" = open the saved copy if present,
+/// "updated" = reuse unless Moodle's copy (timemodified) is newer than the saved file.
 #[tauri::command]
 async fn download_file(
     app: AppHandle,
@@ -238,7 +348,10 @@ async fn download_file(
     dir: String,
     subdir: String,
     filename: String,
-) -> Result<String, String> {
+    mode: String,
+    modified: Option<u64>,
+    force: Option<bool>,
+) -> Result<Value, String> {
     let s = state
         .session
         .lock()
@@ -255,10 +368,50 @@ async fn download_file(
             .trim()
             .to_string()
     };
-    let mut path = std::path::PathBuf::from(dir);
-    path.push(clean(&subdir));
+    // empty dir = the default folder (system Downloads/MoodleDesk); the folder is chosen in Settings only
+    let mut path = if dir.trim().is_empty() {
+        default_dir(&app)?
+    } else {
+        std::path::PathBuf::from(dir)
+    };
+    let sub = clean(&subdir);
+    path.push(if sub.is_empty() {
+        "Moodle".to_string()
+    } else {
+        sub
+    });
     std::fs::create_dir_all(&path).map_err(|e| e.to_string())?;
     path.push(clean(&filename));
+    let p = path.to_string_lossy().to_string();
+
+    if path.is_file() && mode != "always" && !force.unwrap_or(false) {
+        let up_to_date = mode == "reuse"
+            || modified.map_or(true, |m| {
+                std::fs::metadata(&path)
+                    .and_then(|md| md.modified())
+                    .ok()
+                    .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                    .map_or(false, |d| d.as_secs() >= m)
+            });
+        if up_to_date {
+            // adopt a saved copy we don't track yet, so it can be re-downloaded or cleared later
+            let mut m = load_manifest(&app);
+            if !m.iter().any(|e| e.path == p) {
+                let size = std::fs::metadata(&path).map(|md| md.len()).unwrap_or(0);
+                m.push(DlEntry {
+                    path: p.clone(),
+                    course: subdir.clone(),
+                    name: filename.clone(),
+                    size,
+                    at: now_secs(),
+                });
+                save_manifest(&app, &m);
+            }
+            launch(&app, &p)?;
+            return Ok(serde_json::json!({ "path": p, "reused": true }));
+        }
+    }
+
     let sep = if url.contains('?') { '&' } else { '?' };
     let bytes = reqwest::get(format!("{url}{sep}token={}", s.token))
         .await
@@ -269,11 +422,62 @@ async fn download_file(
         .await
         .map_err(|e| e.to_string())?;
     std::fs::write(&path, &bytes).map_err(|e| e.to_string())?;
-    let p = path.to_string_lossy().to_string();
-    app.opener()
-        .open_path(p.clone(), None::<&str>)
-        .map_err(|e| e.to_string())?;
-    Ok(p)
+
+    // remember what we saved, so "clear downloads" only ever touches our own files
+    let mut m = load_manifest(&app);
+    m.retain(|e| e.path != p);
+    m.push(DlEntry {
+        path: p.clone(),
+        course: subdir,
+        name: filename,
+        size: bytes.len() as u64,
+        at: now_secs(),
+    });
+    save_manifest(&app, &m);
+
+    launch(&app, &p)?;
+    Ok(serde_json::json!({ "path": p, "reused": false }))
+}
+
+#[tauri::command]
+fn list_downloads(app: AppHandle) -> Vec<DlEntry> {
+    let mut m = load_manifest(&app);
+    m.retain(|e| std::path::Path::new(&e.path).is_file());
+    for e in m.iter_mut() {
+        if let Ok(md) = std::fs::metadata(&e.path) {
+            e.size = md.len();
+        }
+    }
+    save_manifest(&app, &m);
+    m.sort_by(|a, b| a.course.cmp(&b.course).then(a.name.cmp(&b.name)));
+    m
+}
+
+/// Deletes the given tracked files (or all tracked files when paths is null). Returns how many were removed.
+#[tauri::command]
+fn delete_downloads(app: AppHandle, paths: Option<Vec<String>>) -> u64 {
+    let mut n = 0u64;
+    let mut m = load_manifest(&app);
+    m.retain(|e| {
+        if paths.as_ref().map_or(false, |p| !p.contains(&e.path)) {
+            return true;
+        }
+        let gone = std::fs::remove_file(&e.path).is_ok() || !std::path::Path::new(&e.path).exists();
+        if gone {
+            n += 1;
+            if let Some(d) = std::path::Path::new(&e.path).parent() {
+                let _ = std::fs::remove_dir(d);
+            } // only succeeds if empty
+        }
+        !gone
+    });
+    save_manifest(&app, &m);
+    n
+}
+
+#[tauri::command]
+fn open_local(app: AppHandle, path: String) -> Result<(), String> {
+    launch(&app, &path)
 }
 
 /// Opens a URL in the system browser. For same-site URLs it first asks Moodle for a one-time
@@ -367,9 +571,7 @@ async fn open_authed(
             );
         }
     }
-    app.opener()
-        .open_url(target, None::<&str>)
-        .map_err(|e| e.to_string())?;
+    launch(&app, &target)?;
     Ok(note)
 }
 
@@ -471,8 +673,13 @@ pub fn run() {
             get_session,
             logout,
             download_file,
+            default_download_dir,
+            open_external,
             open_authed,
-            check_update
+            check_update,
+            list_downloads,
+            delete_downloads,
+            open_local
         ])
         .run(tauri::generate_context!())
         .expect("error while running MoodleDesk");

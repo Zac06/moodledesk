@@ -4,7 +4,7 @@ export type Session = { site: string; token: string };
 export type Info = { userid: number; fullname: string; sitename: string };
 export type Filter = "all" | "inprogress" | "future" | "past" | "favourites" | "hidden";
 export type Course = { id: number; fullname: string; shortname: string; progress?: number | null; courseimage?: string; isfavourite?: boolean; hidden?: boolean };
-export type FileItem = { type: string; filename: string; fileurl: string; filesize: number };
+export type FileItem = { type: string; filename: string; fileurl: string; filesize: number; timemodified?: number };
 export type Module = { id: number; name: string; modname: string; instance?: number; url?: string; description?: string; contents?: FileItem[] };
 // component/itemid are set on sections that belong to a subsection activity (Moodle 4.5+)
 export type Section = { id: number; name: string; summary?: string; component?: string | null; itemid?: number | null; modules: Module[] };
@@ -32,8 +32,14 @@ export const setHidden = (uid: number, id: number, hide: boolean) => {
     : ws("core_user_update_user_preferences", { userid: String(uid), "preferences[0][type]": name });
 };
 export const courseContents = (id: number) => ws<Section[]>("core_course_get_contents", { courseid: String(id) });
-export const download = (url: string, dir: string, subdir: string, filename: string) =>
-  invoke<string>("download_file", { url, dir, subdir, filename });
+export type DlMode = "updated" | "reuse" | "always";
+export type DlEntry = { path: string; course: string; name: string; size: number; at: number };
+export const download = (url: string, dir: string, subdir: string, filename: string, mode: DlMode, modified?: number, force = false) =>
+  invoke<{ path: string; reused: boolean }>("download_file", { url, dir, subdir, filename, mode, modified: modified ?? null, force });
+export const defaultDownloadDir = () => invoke<string>("default_download_dir");
+export const listDownloads = () => invoke<DlEntry[]>("list_downloads");
+export const deleteDownloads = (paths?: string[]) => invoke<number>("delete_downloads", { paths: paths ?? null });
+export const openLocal = (path: string) => invoke<void>("open_local", { path });
 export const courseById = async (id: number) =>
   (await ws<{ courses: Course[] }>("core_course_get_courses_by_field", { field: "id", value: String(id) })).courses[0];
 let onNote: (m: string) => void = () => {};
@@ -64,3 +70,5 @@ export const selfEnrol = (courseid: number, instanceid: number, password: string
     { courseid: String(courseid), instanceid: String(instanceid), ...(password ? { password } : {}) });
 // every course the user is enrolled in, including hidden ones (the timeline "all" view omits them)
 export const enrolledCourses = (uid: number) => ws<{ id: number }[]>("core_enrol_get_users_courses", { userid: String(uid) });
+// opens a web link in the system browser (Rust side; also works from inside an AppImage)
+export const openExternal = (url: string) => invoke<void>("open_external", { url });
