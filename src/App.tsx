@@ -276,7 +276,13 @@ const MODES: [api.DlMode, string, string][] = [
   ["always", "Always download again", "Fetch a fresh copy every time and overwrite the saved one."],
 ];
 
-function Settings({ dir, pick, reset, mode, setMode, notify }: { dir: string | null; pick: () => Promise<string | null>; reset: () => void; mode: api.DlMode; setMode: (m: api.DlMode) => void; notify: (m: string) => void }) {
+type Theme = "system" | "light" | "dark";
+const THEMES: [Theme, string, string][] = [["system", "System", "Follow your computer"], ["light", "Light", "Always light"], ["dark", "Dark", "Always dark"]];
+
+type Contrast = "system" | "on" | "off";
+const CONTRASTS: [Contrast, string, string][] = [["system", "System", "Follow your computer"], ["on", "On", "Always high contrast"], ["off", "Off", "Never"]];
+
+function Settings({ dir, pick, reset, mode, setMode, notify, theme, setTheme, contrast, setContrast }: { dir: string | null; pick: () => Promise<string | null>; reset: () => void; mode: api.DlMode; setMode: (m: api.DlMode) => void; notify: (m: string) => void; theme: Theme; setTheme: (t: Theme) => void; contrast: Contrast; setContrast: (c: Contrast) => void }) {
   const [files, setFiles] = useState<api.DlEntry[] | null>(null); const [confirm, setConfirm] = useState<string | null>(null);
   const reload = () => api.listDownloads().then(setFiles).catch(() => setFiles([]));
   useEffect(() => { reload(); }, []);
@@ -291,6 +297,13 @@ function Settings({ dir, pick, reset, mode, setMode, notify }: { dir: string | n
   return (
     <div className="stack">
       <div className="bar"><h1>Settings</h1></div>
+      <section className="sec">
+        <div className="sechead static">Appearance</div>
+        <div className="setrow col"><b>Theme</b>
+          <div className="choices">{THEMES.map(([k, t, d]) => <button key={k} aria-pressed={theme === k} className={theme === k ? "choice on" : "choice"} onClick={() => setTheme(k)}><b>{t}</b><small>{d}</small></button>)}</div></div>
+        <div className="setrow col"><div><b>High contrast</b><small>Stronger text and borders, plain colours and clear focus outlines</small></div>
+          <div className="choices">{CONTRASTS.map(([k, t, d]) => <button key={k} aria-pressed={contrast === k} className={contrast === k ? "choice on" : "choice"} onClick={() => setContrast(k)}><b>{t}</b><small>{d}</small></button>)}</div></div>
+      </section>
       <section className="sec">
         <div className="sechead static">Downloads</div>
         <div className="setrow"><div className="grow"><b>Download folder</b><small>{shownDir ?? "…"}{!dir && shownDir ? " (default)" : ""}</small></div>
@@ -320,12 +333,66 @@ function Settings({ dir, pick, reset, mode, setMode, notify }: { dir: string | n
     </div>);
 }
 
+// first-launch setup: look + accessibility, shown once. Signing in to the university happens afterwards, on the normal login screen.
+const seenSetup = () => localStorage.getItem("onboarded") === "1" || ["theme", "contrast", "dlMode", "dlDir"].some((k) => localStorage.getItem(k) !== null);
+
+function Setup({ theme, setTheme, contrast, setContrast, onDone }: { theme: Theme; setTheme: (t: Theme) => void; contrast: Contrast; setContrast: (c: Contrast) => void; onDone: () => void }) {
+  const [step, setStep] = useState(0); const last = 2;
+  return (
+    <div className="setup">
+      <button className="ghost skip" onClick={onDone}>Skip</button>
+      <div className="setupcard">
+        {step === 0 && (<>
+          <div className="logo sm big">M</div>
+          <h1>Welcome to MoodleDesk</h1>
+          <p className="muted">Your courses and materials, right on your desktop. Let's set it up the way you like it. It takes a few seconds.</p>
+        </>)}
+        {step === 1 && (<>
+          <h1>Choose your look</h1>
+          <p className="muted">Pick how MoodleDesk should appear. The whole window updates as you choose.</p>
+          <div className="looks">{THEMES.map(([k, t, d]) => (
+            <button key={k} aria-pressed={theme === k} className={theme === k ? "look on" : "look"} onClick={() => setTheme(k)}>
+              <div className={"thumb " + k}><i className="tb" /><i className="tc" /><i className="tc" /></div>
+              <b>{t}</b><small>{d}</small>
+            </button>))}</div>
+        </>)}
+        {step === 2 && (<>
+          <h1>Make it comfortable</h1>
+          <p className="muted">Turn on anything that helps you read and navigate more easily.</p>
+          <div className="accrow col"><div><b>High contrast</b><small>Stronger text and borders, plain colours and clear focus outlines</small></div>
+          <div className="choices">{CONTRASTS.map(([k, t, d]) => <button key={k} aria-pressed={contrast === k} className={contrast === k ? "choice on" : "choice"} onClick={() => setContrast(k)}><b>{t}</b><small>{d}</small></button>)}</div></div>
+          <p className="muted small2">You can change all of this later in Settings.</p>
+        </>)}
+        <div className="setupnav">
+          {step > 0 ? <button className="btn" onClick={() => setStep(step - 1)}>Back</button> : <span style={{ width: 70 }} />}
+          <div className="pager">{[0, 1, 2].map((i) => <i key={i} className={i === step ? "on" : ""} />)}</div>
+          <button className="primary" style={{ padding: "12px 22px" }} onClick={() => (step < last ? setStep(step + 1) : onDone())}>{step === 0 ? "Get started" : step < last ? "Next" : "Continue to login"}</button>
+        </div>
+      </div>
+    </div>);
+}
+
 export default function App() {
   const [session, setSession] = useState<api.Session | null | undefined>(undefined);
   const [info, setInfo] = useState<api.Info | null>(null); const [courses, setCourses] = useState<api.Course[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dlMode, setDlMode] = useState<api.DlMode>((localStorage.getItem("dlMode") as api.DlMode) || "updated");
   const changeMode = (m: api.DlMode) => { localStorage.setItem("dlMode", m); setDlMode(m); };
+  const [theme, setThemeState] = useState<Theme>((localStorage.getItem("theme") as Theme) || "system");
+  const [contrast, setContrastState] = useState<Contrast>(() => { const v = localStorage.getItem("contrast"); return v === "on" || v === "high" ? "on" : v === "off" ? "off" : "system"; });   // System by default
+  const [osHigh, setOsHigh] = useState(() => matchMedia("(prefers-contrast: more)").matches);
+  useEffect(() => { const mq = matchMedia("(prefers-contrast: more)"); const f = () => setOsHigh(mq.matches); mq.addEventListener("change", f); return () => mq.removeEventListener("change", f); }, []);
+  const high = contrast === "on" || (contrast === "system" && osHigh);
+  const setTheme = (t: Theme) => { localStorage.setItem("theme", t); setThemeState(t); };
+  const setContrast = (c: Contrast) => { localStorage.setItem("contrast", c); setContrastState(c); };
+  const [setup, setSetup] = useState(!seenSetup());
+  useEffect(() => { if (session && setup) { localStorage.setItem("onboarded", "1"); setSetup(false); } }, [session]);   // existing users never see it
+  const finishSetup = () => { localStorage.setItem("onboarded", "1"); setSetup(false); };
+  useEffect(() => {
+    const r = document.documentElement;
+    if (theme === "system") delete r.dataset.theme; else r.dataset.theme = theme;
+    if (high) r.dataset.contrast = "high"; else delete r.dataset.contrast;
+  }, [theme, high]);
   const [explore, setExplore] = useState(false); const [enrolledIds, setEnrolledIds] = useState<Set<number>>(new Set());
   const [stack, setStack] = useState<api.Course[]>([]); const [q, setQ] = useState("");
   const open_ = stack[stack.length - 1] ?? null;
@@ -377,7 +444,9 @@ export default function App() {
   const resetDir = () => { localStorage.removeItem("dlDir"); setDir(null); };
 
   if (session === undefined) return null;
-  if (!session) return <Login onDone={refresh} />;
+  if (!session) return setup
+    ? <Setup theme={theme} setTheme={setTheme} contrast={contrast} setContrast={setContrast} onDone={finishSetup} />
+    : <Login onDone={refresh} />;
   const shown = courses.filter((c) => c.fullname.toLowerCase().includes(q.toLowerCase()));
   return (
     <div className="app">
@@ -401,7 +470,7 @@ export default function App() {
           <Explore site={session.site} token={session.token} enrolled={enrolledIds} notify={notify} onLink={handleLink}
             onJoined={(c) => { setExplore(false); setStack([c]); load(filter); }} />
         ) : settingsOpen ? (
-          <Settings dir={dir} pick={pick} reset={resetDir} mode={dlMode} setMode={changeMode} notify={notify} />
+          <Settings dir={dir} pick={pick} reset={resetDir} mode={dlMode} setMode={changeMode} notify={notify} theme={theme} setTheme={setTheme} contrast={contrast} setContrast={setContrast} />
         ) : (<>
           <div className="bar"><h1>My courses</h1><input className="search" placeholder="Search courses…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
           <div className="tabs">{FILTERS.map(([k, l]) => <button key={k} className={filter === k ? "tab on" : "tab"} onClick={() => setFilter(k)}>{l}</button>)}</div>
