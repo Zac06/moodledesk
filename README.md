@@ -4,9 +4,11 @@ A native, cross-platform desktop client for [Moodle](https://moodle.org), built 
 
 Runs on **Linux, Windows and macOS**. (Mobile is covered by the official Moodle app.)
 
+Download page: <https://zac06.github.io/moodledesk/> (source in [`docs/`](docs), published with GitHub Pages).
+
 ## Screenshot
 
-![](assets/screenshot.png)
+![](docs/screenshot.png)
 
 ## Features
 

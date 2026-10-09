@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MoodleDesk: a desktop app for Moodle</title>
+<meta name="description" content="MoodleDesk is a free desktop client for Moodle on Linux, Windows and macOS. Browse your courses, read assignments and download files without opening the website.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#eceeed;--card:#f8f9f8;--fg:#1d2522;--mut:#566360;--line:#d1d7d4;--acc:#1f5c4a;--accfg:#1f5c4a;--accon:#fff;--r:6px;
+--sans:system-ui,"Segoe UI Variable Text","Segoe UI",Roboto,"Helvetica Neue",sans-serif;--serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua","URW Palladio L",P052,Georgia,serif;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#161b19;--card:#1c2220;--fg:#e3e8e5;--mut:#94a19b;--line:#2c3531;--acc:#6fbf9f;--accfg:#7cc9a8;--accon:#10231b;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 var(--sans)}
+a{color:var(--accfg);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--accfg);outline-offset:3px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+header{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.brand{display:flex;align-items:center;gap:12px;font:600 22px var(--serif);color:var(--fg);text-decoration:none}
+.brand img{width:36px;height:36px}
+header nav a{margin-left:22px;color:var(--mut);text-decoration:none}header nav a:hover{color:var(--fg)}
+.hero{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:56px;align-items:center;padding:56px 0 72px}
+h1{font:600 clamp(36px,5vw,54px)/1.08 var(--serif);margin:0 0 20px}
+.lede{max-width:46ch;margin:0 0 28px;font-size:18px}
+.btn{display:inline-block;background:var(--acc);color:var(--accon);padding:13px 22px;border-radius:var(--r);font-weight:600;text-decoration:none}
+.btn:hover{filter:brightness(1.08)}
+.meta{margin:12px 0 0;color:var(--mut);font-size:14px}
+.shot{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:var(--r)}
+section{padding:48px 0;border-top:1px solid var(--line)}
+h2{font:600 28px/1.2 var(--serif);margin:0 0 24px}
+.rows{display:grid;grid-template-columns:minmax(150px,1fr) 3fr;gap:0 40px;margin:0}
+.rows dt,.rows dd{padding:16px 0;border-top:1px solid var(--line);margin:0}
+.rows dt:first-of-type,.rows dt:first-of-type+dd{border-top:0;padding-top:0}
+.rows dt{font:600 18px var(--serif)}
+.rows dd{max-width:62ch}
+.files{list-style:none;margin:0;padding:0;max-width:640px}
+.files li{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid var(--line)}
+.files li:first-child{border-top:0}
+.files small{color:var(--mut)}
+.platform{font:600 18px var(--serif);margin:28px 0 8px}.platform:first-child{margin-top:0}
+footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--mut);font-size:14px}
+@media(max-width:860px){.hero{grid-template-columns:1fr;gap:36px;padding-top:24px}.rows{grid-template-columns:1fr}.rows dt{padding-bottom:0;border-top:1px solid var(--line)}.rows dd{border-top:0;padding-top:4px}.rows dt:first-of-type{border-top:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="brand" href="./"><img src="icon.svg" alt="">MoodleDesk</a>
+  <nav><a href="https://github.com/zac06/moodledesk">Source</a><a href="https://github.com/zac06/moodledesk/releases">All releases</a></nav>
+</header>
+
+<main>
+<div class="hero">
+  <div>
+    <h1>Your Moodle courses, on your desktop.</h1>
+    <p class="lede">MoodleDesk is a free desktop app for Moodle. Open your courses, read assignments and save course files without loading the website each time.</p>
+    <a class="btn" id="get" href="https://github.com/zac06/moodledesk/releases/latest">Download from GitHub</a>
+    <p class="meta" id="meta">Works on Linux, Windows and macOS.</p>
+  </div>
+  <img class="shot" src="screenshot.png" width="1230" height="908" alt="MoodleDesk showing a grid of courses with a sidebar">
+</div>
+
+<section>
+  <h2>What you can do</h2>
+  <dl class="rows">
+    <dt>Sign in</dt><dd>Enter your university's Moodle address. Single sign-on opens your institution's own login page in your browser, and you come straight back to the app. Plain username and password sites work too.</dd>
+    <dt>Browse courses</dt><dd>Filter by in progress, future, ended or favourites, search by name, and hide the courses you no longer need.</dd>
+    <dt>Read assignments</dt><dd>See due dates, descriptions, attachments, your submission status and grade. Locked assignments show when they open. To hand something in, the app opens the page in your browser, already logged in.</dd>
+    <dt>Keep your files</dt><dd>Files are saved in a folder per course and open in your usual PDF viewer or office app. By default a file is downloaded again only when your teacher has updated it.</dd>
+    <dt>Find more courses</dt><dd>Search the whole site by course, department or teacher and enrol yourself in courses that allow it.</dd>
+    <dt>Stay private</dt><dd>Your login is stored in the system keychain. MoodleDesk talks only to your Moodle site and to GitHub, to check for new versions.</dd>
+  </dl>
+</section>
+
+<section id="downloads">
+  <h2>Downloads</h2>
+  <div id="list"><p>Loading the latest version…</p></div>
+</section>
+
+<section>
+  <h2>First launch</h2>
+  <dl class="rows">
+    <dt>Windows</dt><dd>The installer is not code-signed yet, so SmartScreen may warn you. Choose More info, then Run anyway.</dd>
+    <dt>macOS</dt><dd>The app is not notarized yet. If macOS refuses to open it, right-click the app and choose Open, or allow it under System Settings, Privacy &amp; Security.</dd>
+    <dt>Linux</dt><dd>For the AppImage, make it executable first: <code>chmod +x MoodleDesk*.AppImage</code>. The .deb and .rpm packages install with your package manager.</dd>
+  </dl>
+</section>
+</main>
+
+<footer>MoodleDesk is free software under the <a href="https://github.com/zac06/moodledesk/blob/main/LICENSE">GNU GPL v3</a>. It is an independent project and is not affiliated with Moodle.</footer>
+</div>
+
+<script>
+(function () {
+  var REL = "https://github.com/zac06/moodledesk/releases";
+  var kinds = [
+    ["windows", "Windows", [[/setup\.exe$/i, "Installer (.exe)"], [/\.msi$/i, "MSI package"]]],
+    ["mac", "macOS", [[/\.dmg$/i, "Disk image (.dmg), Intel and Apple silicon"]]],
+    ["linux", "Linux", [[/\.AppImage$/i, "AppImage, any distribution"], [/\.deb$/i, "Debian and Ubuntu (.deb)"], [/\.rpm$/i, "Fedora and openSUSE (.rpm)"]]]
+  ];
+  var ua = ((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "") + " " + navigator.userAgent;
+  var os = /Android|iPhone|iPad/i.test(ua) ? null : /Win/i.test(ua) ? "windows" : /Mac/i.test(ua) ? "mac" : /Linux|X11/i.test(ua) ? "linux" : null;
+  var mb = function (b) { return Math.max(1, Math.round(b / 1048576)) + " MB"; };
+  var el = function (tag, text, cls) { var e = document.createElement(tag); if (text) e.textContent = text; if (cls) e.className = cls; return e; };
+  var list = document.getElementById("list");
+
+  function fail() {
+    list.textContent = "";
+    var p = el("p", "The download list could not be loaded. ");
+    var a = el("a", "Get the latest version on GitHub"); a.href = REL + "/latest"; p.appendChild(a); p.appendChild(document.createTextNode("."));
+    list.appendChild(p);
+  }
+
+  fetch("https://api.github.com/repos/zac06/moodledesk/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (rel) {
+      var assets = rel.assets || [], first = null;
+      list.textContent = "";
+      kinds.forEach(function (k) {
+        var rows = [];
+        k[2].forEach(function (t) { assets.forEach(function (a) { if (t[0].test(a.name) && !/\.sig$/i.test(a.name)) rows.push([a, t[1]]); }); });
+        if (!rows.length) return;
+        if (k[0] === os) first = rows[0][0];
+        list.appendChild(el("h3", k[1], "platform"));
+        var ul = el("ul", "", "files");
+        rows.forEach(function (r) {
+          var li = el("li"), a = el("a", r[1]); a.href = r[0].browser_download_url;
+          li.appendChild(a); li.appendChild(el("small", mb(r[0].size))); ul.appendChild(li);
+        });
+        list.appendChild(ul);
+      });
+      if (!list.firstChild) return fail();
+      var date = rel.published_at ? new Date(rel.published_at).toLocaleDateString(undefined, { dateStyle: "long" }) : "";
+      var k = kinds.filter(function (k) { return k[0] === os; })[0];
+      if (first) {
+        var btn = document.getElementById("get");
+        btn.href = first.browser_download_url; btn.textContent = "Download for " + k[1];
+        document.getElementById("meta").textContent = "Version " + rel.tag_name.replace(/^v/, "") + ", " + mb(first.size) + (date ? ", released " + date : "") + ".";
+      } else {
+        document.getElementById("meta").textContent = "Version " + rel.tag_name.replace(/^v/, "") + (date ? ", released " + date : "") + ". For Linux, Windows and macOS.";
+      }
+    })
+    .catch(fail);
+})();
+</script>
+</body>
+</html>
