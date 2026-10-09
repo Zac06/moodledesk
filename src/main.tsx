@@ -1,5 +1,6 @@
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import { init } from "./api";
 import "./style.css";
 // apply the saved appearance before React renders, so there is no flash of the wrong theme
 {
@@ -8,4 +9,4 @@ import "./style.css";
   // "system" (the default, also when nothing is saved) follows the OS; "on"/"high" and "off" are explicit choices
   if (c === "on" || c === "high" || (c !== "off" && matchMedia("(prefers-contrast: more)").matches)) root.dataset.contrast = "high";
 }
-ReactDOM.createRoot(document.getElementById("root")!).render(<App />);
+init().then(() => ReactDOM.createRoot(document.getElementById("root")!).render(<App />));

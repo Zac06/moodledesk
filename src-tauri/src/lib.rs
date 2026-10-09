@@ -340,6 +340,11 @@ fn default_dir(app: &AppHandle) -> Result<std::path::PathBuf, String> {
         .map(|p| p.join("MoodleDesk"))
         .map_err(|e| e.to_string())
 }
+/// `moodledesk --screenshot`: the UI shows invented courses and a made-up user instead of the real account.
+#[tauri::command]
+fn screenshot_mode() -> bool {
+    std::env::args().any(|a| a == "--screenshot")
+}
 #[tauri::command]
 fn default_download_dir(app: AppHandle) -> Result<String, String> {
     default_dir(&app).map(|p| p.to_string_lossy().to_string())
@@ -709,6 +714,7 @@ pub fn run() {
             logout,
             download_file,
             default_download_dir,
+            screenshot_mode,
             open_external,
             open_authed,
             check_update,
