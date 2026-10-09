@@ -8,6 +8,7 @@ const P: Record<string, string> = {
   file: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6",
   link: "M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7 M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7",
   chat: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z",
+  lock: "M5 11h14v10H5z M8 11V7a4 4 0 0 1 8 0v4",
   check: "M9 11l3 3L22 4 M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11",
   folder: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z",
   book: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5z",
@@ -33,10 +34,13 @@ const hue = (id: number) => (id * 47) % 360;
 const size = (b: number) => (b > 1e6 ? (b / 1e6).toFixed(1) + " MB" : Math.max(1, Math.round(b / 1e3)) + " KB");
 const initials = (n: string) =>
   n.split(/[\s\-–]+/).filter((w) => /^\p{L}{3,}/u.test(w)).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || n[0]?.toUpperCase() || "?";
-const grad = (id: number) => `linear-gradient(135deg,hsl(${hue(id)} 70% 55%),hsl(${hue(id) + 40} 70% 42%))`;
-// Moodle's auto-generated covers are data: URIs -> keep our gradient; real images need the token
-const realImage = (u: string | undefined, token: string) => {
+const tone = (id: number) => `hsl(${hue(id)} 30% 34%)`;
+// Moodle's auto-generated covers are data: URIs -> keep our flat colour; real images need the token
+// the token is only ever attached to URLs on the Moodle site itself, never to a host named inside course content
+const sameOrigin = (site: string, u: string) => { try { return new URL(u, site).origin === new URL(site).origin; } catch { return false; } };
+const realImage = (u: string | undefined, site: string, token: string) => {
   if (!u || u.startsWith("data:")) return null;
+  if (!sameOrigin(site, u)) return u;
   const w = u.includes("/webservice/pluginfile.php") ? u : u.replace("/pluginfile.php", "/webservice/pluginfile.php");
   return w + (w.includes("?") ? "&" : "?") + "token=" + token;
 };
@@ -53,7 +57,7 @@ function Login({ onDone }: { onDone: () => void }) {
   const connect = async () => { setMsg(""); setBusy(true); try { setSite(await api.resolveSite(url)); } catch (e) { setMsg(String(e)); } setBusy(false); };
   return (
     <div className="login">
-      <div className="hero"><div className="logo">M</div><h1>MoodleDesk</h1><p>All your courses and materials, natively on your desktop.</p></div>
+      <div className="hero"><div className="logo">M</div><h1>MoodleDesk</h1><p>Your Moodle courses and files, on your desktop.</p></div>
       <div className="panel">
         <h2>{site ? site.config.sitename : "Connect to your university"}</h2>
         {!site ? (<>
@@ -79,17 +83,46 @@ function Login({ onDone }: { onDone: () => void }) {
 const hasContent = (h?: string) => !!h && (/<(img|a)\b/i.test(h) || h.replace(/<[^>]*>|&nbsp;|\s/g, "").length > 0);
 
 // Moodle HTML (section summaries, labels): sanitised, files get the token, link clicks are routed through onLink
-function Html({ html, token, onLink }: { html: string; token: string; onLink: (href: string) => void }) {
+function Html({ html, site, token, onLink }: { html: string; site: string; token: string; onLink: (href: string) => void }) {
   const clean = useMemo(() => DOMPurify.sanitize(html, { FORBID_ATTR: ["style", "class", "id"], FORBID_TAGS: ["style", "form", "input", "button"] })
-    .replace(/src="([^"]*\/webservice\/pluginfile\.php[^"]*)"/g, (_, u) => `src="${u}${u.includes("?") ? "&amp;" : "?"}token=${token}"`), [html, token]);
+    .replace(/src="([^"]*\/webservice\/pluginfile\.php[^"]*)"/g, (m, u) => sameOrigin(site, u) ? `src="${u}${u.includes("?") ? "&amp;" : "?"}token=${token}"` : m), [html, site, token]);
   return <div className="html" dangerouslySetInnerHTML={{ __html: clean }}
     onClick={(e) => { const a = (e.target as HTMLElement).closest("a"); if (!a) return; e.preventDefault(); const h = a.getAttribute("href"); if (h) onLink(h); }} />;
+}
+
+const SUBMISSION: Record<string, string> = { new: "Not submitted", draft: "Draft, not submitted yet", submitted: "Submitted", reopened: "Reopened for a new attempt" };
+// Moodle sends restriction messages as HTML
+const plain = (h: string) => new DOMParser().parseFromString(h, "text/html").body.textContent?.replace(/\s+/g, " ").trim() ?? "";
+const when = (t: number) => new Date(t * 1000).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+
+function AssignRow({ a, site, token, onLink, getFile }: { a: api.Assign; site: string; token: string; onLink: (href: string) => void; getFile: (f: api.FileItem) => void }) {
+  const [open, setOpen] = useState(false); const [st, setSt] = useState<api.AssignStatus | null>(null); const [err, setErr] = useState("");
+  const toggle = () => { setOpen(!open); if (!open && !st) api.assignStatus(a.id).then(setSt).catch((e) => setErr(String(e))); };
+  const late = a.duedate > 0 && a.duedate * 1000 < Date.now();
+  const locked = a.allowsubmissionsfromdate * 1000 > Date.now();   // 0 = no opening date
+  return (<>
+    <button className="item" onClick={toggle}>
+      <span className="ico"><Icon n={locked ? "lock" : "check"} /></span>
+      <span className="grow">{a.name}{locked && <small>Locked until {when(a.allowsubmissionsfromdate)}</small>}<small>{a.duedate ? (late ? "Was due " : "Due ") + when(a.duedate) : "No due date"}</small></span>
+      <span className={open ? "chev" : "chev shut"}><Icon n="chev" /></span>
+    </button>
+    {open && <div className="summary">
+      {hasContent(a.intro) && <Html site={site} html={a.intro!} token={token} onLink={onLink} />}
+      <p>{err ? "Status unavailable: " + err : st ? SUBMISSION[st.submission] ?? st.submission : "Loading status…"}{st?.grade ? ` · Grade ${st.grade}` : ""}</p>
+      <div className="joinrow">
+        {(a.introattachments ?? []).map((f) => <button className="btn" key={f.filename} onClick={() => getFile({ ...f, type: "file" })}>{f.filename}</button>)}
+        {!locked && <button className="btn" onClick={() => api.openWeb(`${site}/mod/assign/view.php?id=${a.cmid}`)}>Submit in browser</button>}
+      </div>
+    </div>}
+  </>);
 }
 
 function CourseView({ c, site, token, ensureDir, notify, onLink, dlMode }: { c: api.Course; site: string; token: string; ensureDir: () => Promise<string | null>; notify: (m: string) => void; onLink: (href: string) => void; dlMode: api.DlMode }) {
   const [secs, setSecs] = useState<api.Section[] | null>(null); const [err, setErr] = useState(""); const [closed, setClosed] = useState<Record<number, boolean>>({});
   useEffect(() => { setSecs(null); setErr(""); api.courseContents(c.id).then(setSecs).catch((e) => setErr(String(e))); }, [c.id]);
   const course = c.shortname || c.fullname;
+  const [assigns, setAssigns] = useState<Map<number, api.Assign>>(new Map());   // by course-module id; empty if the site hides the function
+  useEffect(() => { setAssigns(new Map()); api.courseAssignments(c.id).then((l) => setAssigns(new Map(l.map((a) => [a.cmid, a])))).catch(() => {}); }, [c.id]);
   const [saved, setSaved] = useState<Set<string>>(new Set()); const [menu, setMenu] = useState<{ f: api.FileItem; x: number; y: number } | null>(null);
   const refreshSaved = () => api.listDownloads().then((l) => setSaved(new Set(l.map((e) => e.course + "::" + e.name)))).catch(() => {});
   useEffect(() => { refreshSaved(); }, []);
@@ -113,18 +146,23 @@ function CourseView({ c, site, token, ensureDir, notify, onLink, dlMode }: { c: 
   secs.forEach((x) => { if (x.component === "mod_subsection" && x.itemid != null) delegated.set(x.itemid, x); });
   const toggle = (id: number) => setClosed({ ...closed, [id]: !closed[id] });
   const renderMods = (mods: api.Module[]): React.ReactNode => mods.map((m) => {
-    if (m.modname === "label") return hasContent(m.description) ? <div className="summary" key={m.id}><Html html={m.description!} token={token} onLink={onLink} /></div> : null;
+    if (m.modname === "label") return hasContent(m.description) ? <div className="summary" key={m.id}><Html site={site} html={m.description!} token={token} onLink={onLink} /></div> : null;
     if (m.modname === "subsection") {
       const d = m.instance != null ? delegated.get(m.instance) : undefined;
       if (d) return (
         <div className="subsec" key={m.id}>
           <button className="sechead" onClick={() => toggle(d.id)}><span>{m.name || d.name}</span><span className={closed[d.id] ? "chev shut" : "chev"}><Icon n="chev" /></span></button>
           {!closed[d.id] && <>
-            {hasContent(d.summary) && <div className="summary"><Html html={d.summary!} token={token} onLink={onLink} /></div>}
+            {hasContent(d.summary) && <div className="summary"><Html site={site} html={d.summary!} token={token} onLink={onLink} /></div>}
             {renderMods(d.modules)}
           </>}
         </div>);
     }
+    if (m.uservisible === false) return (   // access restriction: show why, and until when if Moodle says
+      <div className="item locked" key={m.id}><span className="ico"><Icon n="lock" /></span>
+        <span className="grow">{m.name}<small>Locked</small>{m.availabilityinfo && <small>{plain(m.availabilityinfo)}</small>}</span></div>);
+    const a = m.modname === "assign" ? assigns.get(m.id) : undefined;
+    if (a) return <AssignRow key={m.id} a={a} site={site} token={token} onLink={onLink} getFile={getFile} />;
     const files = (m.contents ?? []).filter((f) => f.type === "file");
     if (files.length) return files.map((f) => {
       const isSaved = saved.has(course + "::" + f.filename);
@@ -148,7 +186,7 @@ function CourseView({ c, site, token, ensureDir, notify, onLink, dlMode }: { c: 
       <button className="sechead" onClick={() => toggle(s.id)}>
         <span>{s.name || "General"}</span><span className={closed[s.id] ? "chev shut" : "chev"}><Icon n="chev" /></span>
       </button>
-      {!closed[s.id] && hasContent(s.summary) && <div className="summary"><Html html={s.summary!} token={token} onLink={onLink} /></div>}
+      {!closed[s.id] && hasContent(s.summary) && <div className="summary"><Html site={site} html={s.summary!} token={token} onLink={onLink} /></div>}
       {!closed[s.id] && renderMods(s.modules)}
     </section>))}
     {menu && <div className="menu" style={{ position: "fixed", top: menu.y, right: menu.x }} onClick={(e) => e.stopPropagation()}>
@@ -217,10 +255,10 @@ function Explore({ site, token, enrolled, notify, onLink, onJoined }: { site: st
   if (sel) return (
     <div className="stack">
       <div className="bar"><button className="icon" onClick={() => setSel(null)}><Icon n="back" /></button><h1>{sel.fullname}</h1></div>
-      <div className="banner" style={{ background: grad(sel.id) }}>{crumbs(sel).join(" › ") || sel.shortname}</div>
+      <div className="banner" style={{ background: tone(sel.id) }}>{crumbs(sel).join(" › ") || sel.shortname}</div>
       <section className="sec">
         {teachers(sel) && <div className="summary"><b>Taught by:</b> {teachers(sel)}</div>}
-        {hasContent(sel.summary) && <div className="summary"><Html html={sel.summary!} token={token} onLink={onLink} /></div>}
+        {hasContent(sel.summary) && <div className="summary"><Html site={site} html={sel.summary!} token={token} onLink={onLink} /></div>}
         <div className="summary">
           {enrolled.has(sel.id) ? (<><p>You're already enrolled in this course.</p><button className="primary sm" onClick={() => onJoined(asCourse(sel))}>Open course</button></>)
             : methods === null ? <span className="muted">Checking enrolment options…</span>
@@ -257,10 +295,10 @@ function Explore({ site, token, enrolled, notify, onLink, onJoined }: { site: st
       {res && !res.length && !note && <p className="muted pad">No courses found.</p>}
       {res && res.length > 0 && <p className="muted" style={{ margin: "14px 0 0" }}>{res.length} course{res.length === 1 ? "" : "s"}{res.length >= 200 ? " (showing the first 200, refine your search)" : ""}</p>}
       <div className="grid" style={{ marginTop: 14 }}>{(res ?? []).map((c) => {
-        const img = realImage(c.overviewfiles?.[0]?.fileurl, token);
+        const img = realImage(c.overviewfiles?.[0]?.fileurl, site, token);
         return (
           <div className="course" role="button" key={c.id} onClick={() => choose(c)}>
-            <div className="cover" style={{ background: grad(c.id) }}><span>{initials(c.fullname)}</span>{img && <img src={img} onError={(e) => (e.currentTarget.style.display = "none")} />}</div>
+            <div className="cover" style={{ background: tone(c.id) }}><span>{initials(c.fullname)}</span>{img && <img src={img} onError={(e) => (e.currentTarget.style.display = "none")} />}</div>
             <div className="body"><b>{c.fullname}</b>
               <small>{crumbs(c).slice(-2).join(" › ")}</small>
               {teachers(c) && <small>{teachers(c)}</small>}
@@ -464,7 +502,7 @@ export default function App() {
       <main>
         {open_ ? (<>
           <div className="bar"><button className="icon" onClick={() => setStack(stack.slice(0, -1))}><Icon n="back" /></button><h1>{open_.fullname}</h1></div>
-          <div className="banner" style={{ background: `linear-gradient(135deg,hsl(${hue(open_.id)} 70% 55%),hsl(${hue(open_.id) + 40} 70% 42%))` }}>{open_.shortname}</div>
+          <div className="banner" style={{ background: tone(open_.id) }}>{open_.shortname}</div>
           <CourseView key={open_.id} dlMode={dlMode} c={open_} site={session.site} token={session.token} ensureDir={ensureDir} notify={notify} onLink={handleLink} />
         </>) : explore ? (
           <Explore site={session.site} token={session.token} enrolled={enrolledIds} notify={notify} onLink={handleLink}
@@ -476,10 +514,10 @@ export default function App() {
           <div className="tabs">{FILTERS.map(([k, l]) => <button key={k} className={filter === k ? "tab on" : "tab"} onClick={() => setFilter(k)}>{l}</button>)}</div>
           {loading ? <p className="muted pad">Loading…</p> : (
             <div className="grid" onClick={() => setMenu(null)}>{shown.map((c) => {
-              const img = realImage(c.courseimage, session.token); const hid = filter === "hidden" || c.hidden;
+              const img = realImage(c.courseimage, session.site, session.token); const hid = filter === "hidden" || c.hidden;
               return (
                 <div className={menu === c.id ? "course open" : "course"} role="button" key={c.id} onClick={() => setOpen(c)}>
-                  <div className="cover" style={{ background: grad(c.id) }}>
+                  <div className="cover" style={{ background: tone(c.id) }}>
                     <span>{initials(c.fullname)}</span>
                     {img && <img src={img} onError={(e) => (e.currentTarget.style.display = "none")} />}
                   </div>

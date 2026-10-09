@@ -56,6 +56,14 @@ fn normalize_site(input: &str) -> String {
     s.trim_end_matches('/').to_string()
 }
 
+/// Same scheme + host + port as the site. A plain `starts_with` would accept "https://moodle.uni.edu.evil.com".
+fn same_origin(site: &str, url: &str) -> bool {
+    match (reqwest::Url::parse(site), reqwest::Url::parse(url)) {
+        (Ok(a), Ok(b)) => a.origin() == b.origin(),
+        _ => false,
+    }
+}
+
 fn store(app: &AppHandle, session: Session) {
     if let Ok(json) = serde_json::to_string(&session) {
         if let Ok(e) = keyring_entry() {
@@ -358,7 +366,7 @@ async fn download_file(
         .unwrap()
         .clone()
         .ok_or("Not logged in")?;
-    if !url.starts_with(&s.site) {
+    if !same_origin(&s.site, &url) {
         return Err("Refusing to download from a different host".into());
     }
     let clean = |x: &str| {
@@ -413,15 +421,42 @@ async fn download_file(
     }
 
     let sep = if url.contains('?') { '&' } else { '?' };
-    let bytes = reqwest::get(format!("{url}{sep}token={}", s.token))
+    // no total timeout (big files on slow links are fine); only a stalled connection or transfer gives up
+    let resp = reqwest::Client::builder()
+        .connect_timeout(std::time::Duration::from_secs(30))
+        .read_timeout(std::time::Duration::from_secs(60))
+        .build()
+        .map_err(|e| e.to_string())?
+        .get(format!("{url}{sep}token={}", s.token))
+        .send()
         .await
         .map_err(|e| e.to_string())?
         .error_for_status()
-        .map_err(|e| e.to_string())?
-        .bytes()
-        .await
         .map_err(|e| e.to_string())?;
-    std::fs::write(&path, &bytes).map_err(|e| e.to_string())?;
+    let is_json = resp
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .map_or(false, |t| t.starts_with("application/json"));
+    let bytes = resp.bytes().await.map_err(|e| e.to_string())?;
+    // Moodle can answer 200 with a JSON error instead of the file; don't save that as the file
+    if is_json && !filename.to_lowercase().ends_with(".json") {
+        let msg = serde_json::from_slice::<Value>(&bytes)
+            .ok()
+            .and_then(|v| v["message"].as_str().or(v["error"].as_str()).map(String::from))
+            .unwrap_or_else(|| "Moodle returned an error instead of the file".into());
+        return Err(msg);
+    }
+    // write beside the target and rename, so an interrupted write never leaves a truncated "saved" file
+    let mut part = path.clone().into_os_string();
+    part.push(".part");
+    let part = std::path::PathBuf::from(part);
+    std::fs::write(&part, &bytes)
+        .and_then(|_| std::fs::rename(&part, &path))
+        .map_err(|e| {
+            let _ = std::fs::remove_file(&part);
+            e.to_string()
+        })?;
 
     // remember what we saved, so "clear downloads" only ever touches our own files
     let mut m = load_manifest(&app);
@@ -500,7 +535,7 @@ async fn open_authed(
     });
     let mut target = url.clone();
     let mut note: Option<String> = None;
-    if url.starts_with(&s.site) && !recent {
+    if same_origin(&s.site, &url) && !recent {
         if let Some(pt) = s.private_token.clone() {
             let res: Result<String, String> = async {
                 // Moodle only issues auto-login keys to requests that identify as its app (errorcode apprequired)
@@ -683,4 +718,19 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running MoodleDesk");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::same_origin;
+    #[test]
+    fn origin_check() {
+        let site = "https://moodle.uni.edu/mycampus";
+        assert!(same_origin(site, "https://moodle.uni.edu/webservice/pluginfile.php/1/a.pdf"));
+        assert!(same_origin(site, "https://moodle.uni.edu:443/x"));
+        assert!(!same_origin(site, "https://moodle.uni.edu.evil.com/x"));
+        assert!(!same_origin(site, "https://moodle.uni.edu@evil.com/x"));
+        assert!(!same_origin(site, "http://moodle.uni.edu/x"));
+        assert!(!same_origin(site, "not a url"));
+    }
 }

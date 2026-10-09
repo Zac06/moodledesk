@@ -5,7 +5,7 @@ export type Info = { userid: number; fullname: string; sitename: string };
 export type Filter = "all" | "inprogress" | "future" | "past" | "favourites" | "hidden";
 export type Course = { id: number; fullname: string; shortname: string; progress?: number | null; courseimage?: string; isfavourite?: boolean; hidden?: boolean };
 export type FileItem = { type: string; filename: string; fileurl: string; filesize: number; timemodified?: number };
-export type Module = { id: number; name: string; modname: string; instance?: number; url?: string; description?: string; contents?: FileItem[] };
+export type Module = { id: number; name: string; modname: string; instance?: number; uservisible?: boolean; availabilityinfo?: string; url?: string; description?: string; contents?: FileItem[] };
 // component/itemid are set on sections that belong to a subsection activity (Moodle 4.5+)
 export type Section = { id: number; name: string; summary?: string; component?: string | null; itemid?: number | null; modules: Module[] };
 
@@ -72,3 +72,13 @@ export const selfEnrol = (courseid: number, instanceid: number, password: string
 export const enrolledCourses = (uid: number) => ws<{ id: number }[]>("core_enrol_get_users_courses", { userid: String(uid) });
 // opens a web link in the system browser (Rust side; also works from inside an AppImage)
 export const openExternal = (url: string) => invoke<void>("open_external", { url });
+
+// assignments: read-only. The site may not expose these functions, so callers treat failure as "no assignment info".
+export type Assign = { id: number; cmid: number; name: string; duedate: number; allowsubmissionsfromdate: number; intro?: string; introattachments?: FileItem[] };
+export const courseAssignments = async (courseid: number) =>
+  (await ws<{ courses: { assignments: Assign[] }[] }>("mod_assign_get_assignments", { "courseids[0]": String(courseid) })).courses[0]?.assignments ?? [];
+export type AssignStatus = { submission: string; grade?: string };
+export const assignStatus = async (assignid: number): Promise<AssignStatus> => {
+  const r = await ws<any>("mod_assign_get_submission_status", { assignid: String(assignid) });
+  return { submission: r.lastattempt?.submission?.status ?? "new", grade: r.feedback?.gradefordisplay?.replace(/<[^>]*>/g, "").trim() || undefined };
+};
