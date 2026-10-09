@@ -74,7 +74,7 @@ npx tauri icon path/to/icon.png
 
 ### Screenshot mode
 
-`moodledesk --screenshot` shows invented course names, teachers and a made-up username (different on each launch) instead of your account, so you can take screenshots without exposing real data. It sends nothing to any Moodle site and never reads or changes your saved login. Close any running MoodleDesk window first, because a second launch hands its arguments to the first instance instead of starting a new one. In development: `npm run tauri dev -- -- --screenshot`.
+`moodledesk --screenshot` shows invented course names, teachers and a made-up username (different on each launch) instead of your account, so you can take screenshots without exposing real data. It sends nothing to any Moodle site and never reads or changes your saved login. Close any running MoodleDesk window first, because a second launch hands its arguments to the first instance instead of starting a new one. In development, npm swallows the first `--`, and the Tauri CLI needs two more (the first ends its own options, the second starts the app's): `npm run tauri dev -- -- -- --screenshot`.
 
 ## Building
 
