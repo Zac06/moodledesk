@@ -761,7 +761,6 @@ fn logout(app: AppHandle, state: State<AppState>) {
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut app = tauri::Builder::default();
     #[cfg(desktop)]
