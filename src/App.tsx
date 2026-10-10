@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import DOMPurify from "dompurify";
 import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
+import { useCourseStack } from "./courseStack";
 import * as api from "./api";
 
 const P: Record<string, string> = {
@@ -57,7 +58,7 @@ function Login({ onDone }: { onDone: () => void }) {
   const connect = async () => { setMsg(""); setBusy(true); try { setSite(await api.resolveSite(url)); } catch (e) { setMsg(String(e)); } setBusy(false); };
   return (
     <div className="login">
-      <div className="hero"><div className="logo">M</div><h1>MoodleDesk</h1><p>Your Moodle courses and files, on your desktop.</p></div>
+      <div className="hero"><div className="logo">M</div><h1>MoodleDesk</h1><p>Your Moodle courses and files, always at hand.</p></div>
       <div className="panel">
         <h2>{site ? site.config.sitename : "Connect to your university"}</h2>
         {!site ? (<>
@@ -325,12 +326,12 @@ const MODES: [api.DlMode, string, string][] = [
 ];
 
 type Theme = "system" | "light" | "dark";
-const THEMES: [Theme, string, string][] = [["system", "System", "Follow your computer"], ["light", "Light", "Always light"], ["dark", "Dark", "Always dark"]];
+const THEMES: [Theme, string, string][] = [["system", "System", "Follow your device"], ["light", "Light", "Always light"], ["dark", "Dark", "Always dark"]];
 
 type Contrast = "system" | "on" | "off";
-const CONTRASTS: [Contrast, string, string][] = [["system", "System", "Follow your computer"], ["on", "On", "Always high contrast"], ["off", "Off", "Never"]];
+const CONTRASTS: [Contrast, string, string][] = [["system", "System", "Follow your device"], ["on", "On", "Always high contrast"], ["off", "Off", "Never"]];
 
-function Settings({ dir, pick, reset, mode, setMode, notify, theme, setTheme, contrast, setContrast }: { dir: string | null; pick: () => Promise<string | null>; reset: () => void; mode: api.DlMode; setMode: (m: api.DlMode) => void; notify: (m: string) => void; theme: Theme; setTheme: (t: Theme) => void; contrast: Contrast; setContrast: (c: Contrast) => void }) {
+function Settings({ user, site, signOut, dir, pick, reset, mode, setMode, notify, theme, setTheme, contrast, setContrast }: { user: string; site: string; signOut: () => void; dir: string | null; pick: () => Promise<string | null>; reset: () => void; mode: api.DlMode; setMode: (m: api.DlMode) => void; notify: (m: string) => void; theme: Theme; setTheme: (t: Theme) => void; contrast: Contrast; setContrast: (c: Contrast) => void }) {
   const [files, setFiles] = useState<api.DlEntry[] | null>(null); const [confirm, setConfirm] = useState<string | null>(null);
   const reload = () => api.listDownloads().then(setFiles).catch(() => setFiles([]));
   useEffect(() => { reload(); }, []);
@@ -345,6 +346,10 @@ function Settings({ dir, pick, reset, mode, setMode, notify, theme, setTheme, co
   return (
     <div className="stack">
       <div className="bar"><h1>Settings</h1></div>
+      <section className="sec only-phone">
+        <div className="sechead static">Account</div>
+        <div className="setrow"><div className="grow"><b>{user}</b><small>{site}</small></div><button className="btn danger" onClick={signOut}>Sign out</button></div>
+      </section>
       <section className="sec">
         <div className="sechead static">Appearance</div>
         <div className="setrow col"><b>Theme</b>
@@ -354,7 +359,7 @@ function Settings({ dir, pick, reset, mode, setMode, notify, theme, setTheme, co
       </section>
       <section className="sec">
         <div className="sechead static">Downloads</div>
-        <div className="setrow"><div className="grow"><b>Download folder</b><small>{shownDir ?? "…"}{!dir && shownDir ? " (default)" : ""}</small></div>
+        <div className="setrow desk"><div className="grow"><b>Download folder</b><small>{shownDir ?? "…"}{!dir && shownDir ? " (default)" : ""}</small></div>
           <button className="btn" onClick={() => pick()}>Change…</button>
           {dir && <button className="btn" onClick={reset}>Use default</button>}
           {shownDir && <button className="btn" onClick={() => api.openLocal(shownDir).catch(() => notify("That folder doesn't exist yet"))}>Open folder</button>}</div>
@@ -393,7 +398,7 @@ function Setup({ theme, setTheme, contrast, setContrast, onDone }: { theme: Them
         {step === 0 && (<>
           <div className="logo sm big">M</div>
           <h1>Welcome to MoodleDesk</h1>
-          <p className="muted">Your courses and materials, right on your desktop. Let's set it up the way you like it. It takes a few seconds.</p>
+          <p className="muted">Your courses and materials, always at hand. Let's set it up the way you like it. It takes a few seconds.</p>
         </>)}
         {step === 1 && (<>
           <h1>Choose your look</h1>
@@ -442,9 +447,8 @@ export default function App() {
     if (high) r.dataset.contrast = "high"; else delete r.dataset.contrast;
   }, [theme, high]);
   const [explore, setExplore] = useState(false); const [enrolledIds, setEnrolledIds] = useState<Set<number>>(new Set());
-  const [stack, setStack] = useState<api.Course[]>([]); const [q, setQ] = useState("");
+  const [stack, setStack, back, clear] = useCourseStack<api.Course>(); const [q, setQ] = useState("");
   const open_ = stack[stack.length - 1] ?? null;
-  const setOpen = (c: api.Course | null) => setStack(c ? [c] : []);
   const [dir, setDir] = useState(localStorage.getItem("dlDir")); const [toast, setToast] = useState("");
   const notify = useCallback((m: string) => { setToast(m); setTimeout(() => setToast(""), 3500); }, []);
   const refresh = () => api.getSession().then(setSession);
@@ -491,6 +495,7 @@ export default function App() {
   const ensureDir = async () => dir ?? "";   // no prompt here: choose the folder in Settings (default: Downloads/MoodleDesk)
   const resetDir = () => { localStorage.removeItem("dlDir"); setDir(null); };
 
+  const signOut = () => api.logout().then(() => { clear(); refresh(); });
   if (session === undefined) return null;
   if (!session) return setup
     ? <Setup theme={theme} setTheme={setTheme} contrast={contrast} setContrast={setContrast} onDone={finishSetup} />
@@ -501,24 +506,24 @@ export default function App() {
       <aside>
         <div className="brand"><div className="logo sm">M</div>MoodleDesk</div>
         <nav>
-          <button className={!explore && !settingsOpen ? "on" : ""} onClick={() => { setExplore(false); setSettingsOpen(false); setOpen(null); }}><Icon n="book" />My courses</button>
-          <button className={explore ? "on" : ""} onClick={() => { setExplore(true); setSettingsOpen(false); setOpen(null); }}><Icon n="search" />Explore</button>
-          <button className={settingsOpen ? "on" : ""} onClick={() => { setSettingsOpen(true); setExplore(false); setOpen(null); }}><Icon n="sliders" />Settings</button>
+          <button className={!explore && !settingsOpen ? "on" : ""} onClick={() => { setExplore(false); setSettingsOpen(false); clear(); }}><Icon n="book" />My courses</button>
+          <button className={explore ? "on" : ""} onClick={() => { setExplore(true); setSettingsOpen(false); clear(); }}><Icon n="search" />Explore</button>
+          <button className={settingsOpen ? "on" : ""} onClick={() => { setSettingsOpen(true); setExplore(false); clear(); }}><Icon n="sliders" />Settings</button>
         </nav>
         <div className="grow" />
         <div className="user"><div className="avatar">{initials(info?.fullname ?? "?")}</div><span className="grow">{info?.fullname}</span>
-          <button className="icon" title="Sign out" onClick={() => api.logout().then(() => { setOpen(null); refresh(); })}><Icon n="out" /></button></div>
+          <button className="icon" title="Sign out" onClick={signOut}><Icon n="out" /></button></div>
       </aside>
       <main>
         {open_ ? (<>
-          <div className="bar"><button className="icon" onClick={() => setStack(stack.slice(0, -1))}><Icon n="back" /></button><h1>{open_.fullname}</h1></div>
+          <div className="bar"><button className="icon" onClick={back}><Icon n="back" /></button><h1>{open_.fullname}</h1></div>
           <div className="banner" style={{ background: tone(open_.id) }}>{open_.shortname}</div>
           <CourseView key={open_.id} dlMode={dlMode} c={open_} site={session.site} token={session.token} ensureDir={ensureDir} notify={notify} onLink={handleLink} />
         </>) : explore ? (
           <Explore site={session.site} token={session.token} enrolled={enrolledIds} notify={notify} onLink={handleLink}
             onJoined={(c) => { setExplore(false); setStack([c]); load(filter); }} />
         ) : settingsOpen ? (
-          <Settings dir={dir} pick={pick} reset={resetDir} mode={dlMode} setMode={changeMode} notify={notify} theme={theme} setTheme={setTheme} contrast={contrast} setContrast={setContrast} />
+          <Settings user={info?.fullname ?? ""} site={info?.sitename ?? ""} signOut={signOut} dir={dir} pick={pick} reset={resetDir} mode={dlMode} setMode={changeMode} notify={notify} theme={theme} setTheme={setTheme} contrast={contrast} setContrast={setContrast} />
         ) : (<>
           <div className="bar"><h1>My courses</h1><input className="search" placeholder="Search courses…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
           <div className="tabs">{FILTERS.map(([k, l]) => <button key={k} className={filter === k ? "tab on" : "tab"} onClick={() => setFilter(k)}>{l}</button>)}</div>
@@ -526,7 +531,7 @@ export default function App() {
             <div className="grid" onClick={() => setMenu(null)}>{shown.map((c) => {
               const img = realImage(c.courseimage, session.site, session.token); const hid = filter === "hidden" || c.hidden;
               return (
-                <div className={menu === c.id ? "course open" : "course"} role="button" key={c.id} onClick={() => setOpen(c)}>
+                <div className={menu === c.id ? "course open" : "course"} role="button" key={c.id} onClick={() => setStack([c])}>
                   <div className="cover" style={{ background: tone(c.id) }}>
                     <span>{initials(c.fullname)}</span>
                     {img && <img src={img} onError={(e) => (e.currentTarget.style.display = "none")} />}

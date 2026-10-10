@@ -28,6 +28,9 @@
     ]
   },
   "plugins": {
-    "deep-link": { "desktop": { "schemes": ["moodledesk"] } }
+    "deep-link": {
+      "desktop": { "schemes": ["moodledesk"] },
+      "mobile": [{ "scheme": ["moodledesk"], "appLink": false }]
+    }
   }
 }

@@ -3,7 +3,8 @@ import { fake } from "./demo";
 
 // `moodledesk --screenshot`: every call is answered with invented data (see demo.ts)
 let demo = false;
-export const init = () => real<boolean>("screenshot_mode").then((d) => { demo = d; }).catch(() => {});
+export const init = () => Promise.all([real<boolean>("screenshot_mode"), real<boolean>("is_mobile")])
+  .then(([d, m]) => { demo = d; if (m) document.documentElement.dataset.mobile = ""; }).catch(() => {});
 const invoke = <T,>(cmd: string, args?: Record<string, unknown>): Promise<T> => (demo ? (fake(cmd, args) as Promise<T>) : real<T>(cmd, args));
 
 export type Session = { site: string; token: string };

@@ -5,6 +5,8 @@ use std::{collections::HashMap, sync::Mutex};
 use tauri::{AppHandle, Emitter, Manager, State};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_opener::OpenerExt;
+#[cfg(mobile)]
+use tauri_plugin_sharekit::ShareExt;
 
 const SERVICE: &str = "moodle_mobile_app";
 const SCHEME: &str = "moodledesk";
@@ -24,8 +26,51 @@ struct AppState {
     last_autologin: Mutex<Option<std::time::Instant>>,
 }
 
-fn keyring_entry() -> Result<keyring::Entry, String> {
-    keyring::Entry::new("moodledesk", "session").map_err(|e| e.to_string())
+/// Where the login session is kept: the OS keychain (Windows, macOS, iOS, Linux).
+#[cfg(not(target_os = "android"))]
+mod secret {
+    use tauri::AppHandle;
+    fn entry() -> Result<keyring::Entry, String> {
+        keyring::Entry::new("moodledesk", "session").map_err(|e| e.to_string())
+    }
+    pub fn set(_: &AppHandle, v: &str) {
+        if let Ok(e) = entry() {
+            let _ = e.set_password(v);
+        }
+    }
+    pub fn get(_: &AppHandle) -> Option<String> {
+        entry().ok()?.get_password().ok()
+    }
+    pub fn del(_: &AppHandle) {
+        if let Ok(e) = entry() {
+            let _ = e.delete_credential();
+        }
+    }
+}
+
+/// Android has no keyring backend, so the session is a file in the app's private storage (other apps cannot read it).
+/// shortcut: not hardware-backed, and Android auto-backup would copy it unless allowBackup is off (see MOBILE.md); move to the Android Keystore before a Play Store release.
+#[cfg(target_os = "android")]
+mod secret {
+    use tauri::{AppHandle, Manager};
+    fn file(app: &AppHandle) -> Option<std::path::PathBuf> {
+        let d = app.path().app_data_dir().ok()?;
+        std::fs::create_dir_all(&d).ok()?;
+        Some(d.join("session.json"))
+    }
+    pub fn set(app: &AppHandle, v: &str) {
+        if let Some(p) = file(app) {
+            let _ = std::fs::write(p, v);
+        }
+    }
+    pub fn get(app: &AppHandle) -> Option<String> {
+        std::fs::read_to_string(file(app)?).ok()
+    }
+    pub fn del(app: &AppHandle) {
+        if let Some(p) = file(app) {
+            let _ = std::fs::remove_file(p);
+        }
+    }
 }
 
 fn normalize_site(input: &str) -> String {
@@ -75,9 +120,7 @@ fn same_origin(site: &str, url: &str) -> bool {
 
 fn store(app: &AppHandle, session: Session) {
     if let Ok(json) = serde_json::to_string(&session) {
-        if let Ok(e) = keyring_entry() {
-            let _ = e.set_password(&json);
-        }
+        secret::set(app, &json);
     }
     *app.state::<AppState>().session.lock().unwrap() = Some(session);
 }
@@ -160,7 +203,8 @@ fn handle_url(app: &AppHandle, url: &str) {
             private_token: parts.get(2).map(|p| p.to_string()),
         },
     );
-    // bring the app back to the front now that the browser login is done
+    // bring the app back to the front now that the browser login is done (a phone already does this when the link opens the app)
+    #[cfg(desktop)]
     if let Some(w) = app.get_webview_window("main") {
         let _ = w.unminimize();
         let _ = w.show();
@@ -331,10 +375,23 @@ fn launch(app: &AppHandle, target: &str) -> Result<(), String> {
             .open_url(target.to_string(), None::<&str>)
             .map_err(|e| e.to_string())
     } else {
-        app.opener()
-            .open_path(target.to_string(), None::<&str>)
-            .map_err(|e| e.to_string())
+        open_file(app, target)
     }
+}
+
+/// The opener plugin can only open URLs on a phone, so a saved file goes to the share sheet ("Open in…", "Save to Files").
+#[cfg(mobile)]
+fn open_file(app: &AppHandle, path: &str) -> Result<(), String> {
+    let w = app.get_webview_window("main").ok_or("No window")?;
+    app.share()
+        .share_file(w, path.to_string(), Default::default())
+        .map_err(|e| e.to_string())
+}
+#[cfg(desktop)]
+fn open_file(app: &AppHandle, path: &str) -> Result<(), String> {
+    app.opener()
+        .open_path(path.to_string(), None::<&str>)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -346,16 +403,23 @@ fn open_external(app: AppHandle, url: String) -> Result<(), String> {
 }
 
 fn default_dir(app: &AppHandle) -> Result<std::path::PathBuf, String> {
-    app.path()
-        .download_dir()
-        .or_else(|_| app.path().home_dir())
-        .map(|p| p.join("MoodleDesk"))
-        .map_err(|e| e.to_string())
+    // A phone has no Downloads folder an app can write to without extra permissions: files stay in the app's own storage
+    let (base, name) = if cfg!(mobile) {
+        (app.path().app_data_dir(), "downloads")
+    } else {
+        (app.path().download_dir().or_else(|_| app.path().home_dir()), "MoodleDesk")
+    };
+    base.map(|p| p.join(name)).map_err(|e| e.to_string())
 }
 /// `moodledesk --screenshot`: the UI shows invented courses and a made-up user instead of the real account.
 #[tauri::command]
 fn screenshot_mode() -> bool {
     std::env::args().any(|a| a == "--screenshot")
+}
+/// Lets the UI hide what a phone cannot do (choosing a download folder).
+#[tauri::command]
+fn is_mobile() -> bool {
+    cfg!(mobile)
 }
 #[tauri::command]
 fn default_download_dir(app: AppHandle) -> Result<String, String> {
@@ -647,6 +711,9 @@ fn parse_ver(v: &str) -> Vec<u64> {
 /// Checks the latest published GitHub release; returns it only if newer than the running version.
 #[tauri::command]
 async fn check_update(app: AppHandle) -> Result<Option<UpdateInfo>, String> {
+    if cfg!(mobile) {
+        return Ok(None); // the app store updates the app; Google Play and the App Store do not allow pointing users elsewhere
+    }
     let v: Value = reqwest::Client::builder()
         .user_agent("MoodleDesk-update-check")
         .build()
@@ -679,30 +746,33 @@ async fn check_update(app: AppHandle) -> Result<Option<UpdateInfo>, String> {
 
 /// Restores the session from the OS keychain. Returns { site, token } or null.
 #[tauri::command]
-fn get_session(state: State<AppState>) -> Option<Session> {
+fn get_session(app: AppHandle, state: State<AppState>) -> Option<Session> {
     let mut g = state.session.lock().unwrap();
     if g.is_none() {
-        *g = keyring_entry()
-            .ok()
-            .and_then(|e| e.get_password().ok())
-            .and_then(|j| serde_json::from_str(&j).ok());
+        *g = secret::get(&app).and_then(|j| serde_json::from_str(&j).ok());
     }
     g.clone()
 }
 
 #[tauri::command]
-fn logout(state: State<AppState>) {
+fn logout(app: AppHandle, state: State<AppState>) {
     *state.session.lock().unwrap() = None;
-    if let Ok(e) = keyring_entry() {
-        let _ = e.delete_credential();
-    }
+    secret::del(&app);
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_single_instance::init(|_, _, _| {})) // must be first
-        .plugin(tauri_plugin_deep_link::init())
+    let mut app = tauri::Builder::default();
+    #[cfg(desktop)]
+    {
+        app = app.plugin(tauri_plugin_single_instance::init(|_, _, _| {})); // must be first
+    }
+    #[cfg(mobile)]
+    {
+        app = app.plugin(tauri_plugin_sharekit::init());
+    }
+    app.plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(AppState::default())
@@ -727,6 +797,7 @@ pub fn run() {
             download_file,
             default_download_dir,
             screenshot_mode,
+            is_mobile,
             open_external,
             open_authed,
             check_update,
