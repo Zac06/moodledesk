@@ -82,10 +82,20 @@ function Login({ onDone }: { onDone: () => void }) {
 
 const hasContent = (h?: string) => !!h && (/<(img|a)\b/i.test(h) || h.replace(/<[^>]*>|&nbsp;|\s/g, "").length > 0);
 
+// Teachers write this HTML. Images may only come from the Moodle site itself (or data: URIs), so a pasted remote
+// picture can't tell another server who is reading. srcset can list several URLs, so it is dropped.
+let htmlSite = "";
+DOMPurify.addHook("afterSanitizeAttributes", (el) => {
+  for (const a of ["src", "poster", "background"]) {
+    const v = el.getAttribute(a);
+    if (v && !v.startsWith("data:") && !sameOrigin(htmlSite, v)) el.removeAttribute(a);
+  }
+});
+
 // Moodle HTML (section summaries, labels): sanitised, files get the token, link clicks are routed through onLink
 function Html({ html, site, token, onLink }: { html: string; site: string; token: string; onLink: (href: string) => void }) {
-  const clean = useMemo(() => DOMPurify.sanitize(html, { FORBID_ATTR: ["style", "class", "id"], FORBID_TAGS: ["style", "form", "input", "button"] })
-    .replace(/src="([^"]*\/webservice\/pluginfile\.php[^"]*)"/g, (m, u) => sameOrigin(site, u) ? `src="${u}${u.includes("?") ? "&amp;" : "?"}token=${token}"` : m), [html, site, token]);
+  const clean = useMemo(() => { htmlSite = site; return DOMPurify.sanitize(html, { FORBID_ATTR: ["style", "class", "id", "srcset"], FORBID_TAGS: ["style", "form", "input", "button", "image"] })
+    .replace(/src="([^"]*\/webservice\/pluginfile\.php[^"]*)"/g, (m, u) => sameOrigin(site, u) ? `src="${u}${u.includes("?") ? "&amp;" : "?"}token=${token}"` : m); }, [html, site, token]);
   return <div className="html" dangerouslySetInnerHTML={{ __html: clean }}
     onClick={(e) => { const a = (e.target as HTMLElement).closest("a"); if (!a) return; e.preventDefault(); const h = a.getAttribute("href"); if (h) onLink(h); }} />;
 }

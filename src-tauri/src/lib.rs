@@ -56,6 +56,15 @@ fn normalize_site(input: &str) -> String {
     s.trim_end_matches('/').to_string()
 }
 
+/// A password or token must never travel over plain http, so only https sites are accepted.
+fn require_https(site: &str) -> Result<(), String> {
+    if site.starts_with("https://") {
+        Ok(())
+    } else {
+        Err("Only https:// sites are supported, so your login is never sent unencrypted.".into())
+    }
+}
+
 /// Same scheme + host + port as the site. A plain `starts_with` would accept "https://moodle.uni.edu.evil.com".
 fn same_origin(site: &str, url: &str) -> bool {
     match (reqwest::Url::parse(site), reqwest::Url::parse(url)) {
@@ -77,6 +86,7 @@ fn store(app: &AppHandle, session: Session) {
 #[tauri::command]
 async fn resolve_site(input: String) -> Result<Value, String> {
     let site = normalize_site(&input);
+    require_https(&site)?;
     let body = serde_json::json!([{ "index": 0, "methodname": "tool_mobile_get_public_config", "args": {} }]);
     let client = reqwest::Client::builder()
         .user_agent("MoodleDesk/0.1 (MoodleMobile)")
@@ -108,6 +118,7 @@ async fn resolve_site(input: String) -> Result<Value, String> {
 
 #[tauri::command]
 fn start_sso(app: AppHandle, state: State<AppState>, site: String) -> Result<(), String> {
+    require_https(&site)?;
     let passport = uuid::Uuid::new_v4().simple().to_string();
     *state.pending.lock().unwrap() = Some((site.clone(), passport.clone()));
     let url = format!(
@@ -165,6 +176,7 @@ async fn login_password(
     username: String,
     password: String,
 ) -> Result<(), String> {
+    require_https(&site)?;
     let res: Value = reqwest::Client::new()
         .post(format!("{site}/login/token.php"))
         .form(&[
@@ -728,7 +740,7 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
-    use super::same_origin;
+    use super::{require_https, same_origin};
     #[test]
     fn origin_check() {
         let site = "https://moodle.uni.edu/mycampus";
@@ -738,5 +750,11 @@ mod tests {
         assert!(!same_origin(site, "https://moodle.uni.edu@evil.com/x"));
         assert!(!same_origin(site, "http://moodle.uni.edu/x"));
         assert!(!same_origin(site, "not a url"));
+    }
+    #[test]
+    fn https_only() {
+        assert!(require_https("https://moodle.uni.edu").is_ok());
+        assert!(require_https("http://moodle.uni.edu").is_err());
+        assert!(require_https("ftp://moodle.uni.edu").is_err());
     }
 }
