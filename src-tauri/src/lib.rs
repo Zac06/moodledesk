@@ -780,9 +780,15 @@ pub fn run() {
             app.deep_link().register_all()?; // registers moodledesk:// at runtime (dev + portable builds)
             let handle = app.handle().clone();
             app.deep_link().on_open_url(move |ev| {
-                for u in ev.urls() {
-                    handle_url(&handle, u.as_str());
-                }
+                // Android calls this on its UI thread, and handle_url saves the login through a plugin call that needs that
+                // same thread to be free (it would wait for itself forever and freeze the app), so it runs on its own thread.
+                let urls: Vec<String> = ev.urls().iter().map(|u| u.to_string()).collect();
+                let handle = handle.clone();
+                std::thread::spawn(move || {
+                    for u in urls {
+                        handle_url(&handle, &u);
+                    }
+                });
             });
             Ok(())
         })
