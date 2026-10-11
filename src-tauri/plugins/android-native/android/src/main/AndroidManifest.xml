@@ -3,7 +3,7 @@
     <application>
         <!-- hands a copy of a downloaded file to the app the user picks; its own name so it never clashes with another plugin's provider -->
         <provider
-            android:name="androidx.core.content.FileProvider"
+            android:name="app.moodledesk.androidnative.OpenFileProvider"
             android:authorities="${applicationId}.openfile"
             android:exported="false"
             android:grantUriPermissions="true">
