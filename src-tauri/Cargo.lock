@@ -2274,6 +2274,7 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-build",
+ "tauri-plugin-android-native",
  "tauri-plugin-deep-link",
  "tauri-plugin-dialog",
  "tauri-plugin-opener",
@@ -4128,6 +4129,15 @@ dependencies = [
  "serde_json",
  "tauri-utils",
  "walkdir",
+]
+
+[[package]]
+name = "tauri-plugin-android-native"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "tauri",
+ "tauri-plugin",
 ]
 
 [[package]]
