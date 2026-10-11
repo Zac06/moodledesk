@@ -10,7 +10,7 @@
         android:label="@string/app_name"
         android:theme="@style/Theme.moodledesk"
         android:usesCleartextTraffic="${usesCleartextTraffic}"
-        android:allowBackup="false">
+        >
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
             android:launchMode="singleTask"
