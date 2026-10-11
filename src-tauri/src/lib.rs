@@ -5,7 +5,9 @@ use std::{collections::HashMap, sync::Mutex};
 use tauri::{AppHandle, Emitter, Manager, State};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_opener::OpenerExt;
-#[cfg(mobile)]
+#[cfg(target_os = "android")]
+use tauri_plugin_android_native::AndroidNativeExt;
+#[cfg(target_os = "ios")]
 use tauri_plugin_sharekit::ShareExt;
 
 const SERVICE: &str = "moodle_mobile_app";
@@ -21,7 +23,6 @@ struct Session {
 
 #[derive(Default)]
 struct AppState {
-    pending: Mutex<Option<(String, String)>>, // (site, passport)
     session: Mutex<Option<Session>>,
     last_autologin: Mutex<Option<std::time::Instant>>,
 }
@@ -48,28 +49,26 @@ mod secret {
     }
 }
 
-/// Android has no keyring backend, so the session is a file in the app's private storage (other apps cannot read it).
-/// shortcut: not hardware-backed, and Android auto-backup would copy it unless allowBackup is off (see MOBILE.md); move to the Android Keystore before a Play Store release.
+/// Android has no keyring backend: the login is encrypted with a key that stays in the Android Keystore, which is backed
+/// by the phone's secure hardware when it has any (see the android-native plugin).
 #[cfg(target_os = "android")]
 mod secret {
     use tauri::{AppHandle, Manager};
-    fn file(app: &AppHandle) -> Option<std::path::PathBuf> {
-        let d = app.path().app_data_dir().ok()?;
-        std::fs::create_dir_all(&d).ok()?;
-        Some(d.join("session.json"))
-    }
+    use tauri_plugin_android_native::AndroidNativeExt;
     pub fn set(app: &AppHandle, v: &str) {
-        if let Some(p) = file(app) {
-            let _ = std::fs::write(p, v);
+        if let Err(e) = app.android_native().secret_set(v) {
+            eprintln!("could not save the login: {e}");
         }
     }
     pub fn get(app: &AppHandle) -> Option<String> {
-        std::fs::read_to_string(file(app)?).ok()
+        // an earlier build kept the login as a plain file: don't leave it lying around
+        if let Ok(d) = app.path().app_data_dir() {
+            let _ = std::fs::remove_file(d.join("session.json"));
+        }
+        app.android_native().secret_get()
     }
     pub fn del(app: &AppHandle) {
-        if let Some(p) = file(app) {
-            let _ = std::fs::remove_file(p);
-        }
+        app.android_native().secret_delete()
     }
 }
 
@@ -160,14 +159,33 @@ async fn resolve_site(input: String) -> Result<Value, String> {
 }
 
 #[tauri::command]
-fn start_sso(app: AppHandle, state: State<AppState>, site: String) -> Result<(), String> {
+fn start_sso(app: AppHandle, site: String) -> Result<(), String> {
     require_https(&site)?;
     let passport = uuid::Uuid::new_v4().simple().to_string();
-    *state.pending.lock().unwrap() = Some((site.clone(), passport.clone()));
+    save_pending(&pending_dir(&app)?, &site, &passport)?;
     let url = format!(
         "{site}/admin/tool/mobile/launch.php?service={SERVICE}&passport={passport}&urlscheme={SCHEME}"
     );
     launch(&app, &url)
+}
+
+/// The login attempt (site, passport) is kept on disk, because Android can close the app while the browser is open: the
+/// callback then starts the app again and still has to match the attempt it belongs to.
+fn pending_dir(app: &AppHandle) -> Result<std::path::PathBuf, String> {
+    let dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    Ok(dir)
+}
+fn save_pending(dir: &std::path::Path, site: &str, passport: &str) -> Result<(), String> {
+    std::fs::write(dir.join("sso_pending.json"), format!("{site}\n{passport}")).map_err(|e| e.to_string())
+}
+/// One callback answers one attempt: reading it also forgets it.
+fn take_pending(dir: &std::path::Path) -> Option<(String, String)> {
+    let file = dir.join("sso_pending.json");
+    let text = std::fs::read_to_string(&file).ok()?;
+    let _ = std::fs::remove_file(file);
+    let (site, passport) = text.split_once('\n')?;
+    Some((site.to_string(), passport.to_string()))
 }
 
 fn handle_url(app: &AppHandle, url: &str) {
@@ -183,8 +201,7 @@ fn handle_url(app: &AppHandle, url: &str) {
         .decode(b64)
         .ok()
         .and_then(|b| String::from_utf8(b).ok());
-    let state = app.state::<AppState>();
-    let pending = state.pending.lock().unwrap().take();
+    let pending = pending_dir(app).ok().and_then(|d| take_pending(&d));
     let (Some(decoded), Some((site, passport))) = (decoded, pending) else {
         let _ = app.emit("sso-error", "Unexpected login callback");
         return;
@@ -379,8 +396,13 @@ fn launch(app: &AppHandle, target: &str) -> Result<(), String> {
     }
 }
 
-/// The opener plugin can only open URLs on a phone, so a saved file goes to the share sheet ("Open in…", "Save to Files").
-#[cfg(mobile)]
+/// The opener plugin can only open URLs on a phone, so a saved file goes to the app the user picks (Android's "open with"
+/// list) or to the share sheet (iOS: "Open in…", "Save to Files").
+#[cfg(target_os = "android")]
+fn open_file(app: &AppHandle, path: &str) -> Result<(), String> {
+    app.android_native().open_file(path)
+}
+#[cfg(target_os = "ios")]
 fn open_file(app: &AppHandle, path: &str) -> Result<(), String> {
     let w = app.get_webview_window("main").ok_or("No window")?;
     app.share()
@@ -767,7 +789,11 @@ pub fn run() {
     {
         app = app.plugin(tauri_plugin_single_instance::init(|_, _, _| {})); // must be first
     }
-    #[cfg(mobile)]
+    #[cfg(target_os = "android")]
+    {
+        app = app.plugin(tauri_plugin_android_native::init());
+    }
+    #[cfg(target_os = "ios")]
     {
         app = app.plugin(tauri_plugin_sharekit::init());
     }
@@ -779,6 +805,13 @@ pub fn run() {
             #[cfg(any(windows, target_os = "linux"))]
             app.deep_link().register_all()?; // registers moodledesk:// at runtime (dev + portable builds)
             let handle = app.handle().clone();
+            // If the system closed the app during the browser login, the link that comes back starts it from scratch, and
+            // that first link is not delivered as an event: ask for it (before the page loads, so it sees the new login).
+            if let Ok(Some(urls)) = app.deep_link().get_current() {
+                for u in urls {
+                    handle_url(&handle, u.as_str());
+                }
+            }
             app.deep_link().on_open_url(move |ev| {
                 // Android calls this on its UI thread, and handle_url saves the login through a plugin call that needs that
                 // same thread to be free (it would wait for itself forever and freeze the app), so it runs on its own thread.
@@ -816,7 +849,7 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
-    use super::{require_https, same_origin};
+    use super::{require_https, same_origin, save_pending, take_pending};
     #[test]
     fn origin_check() {
         let site = "https://moodle.uni.edu/mycampus";
@@ -826,6 +859,16 @@ mod tests {
         assert!(!same_origin(site, "https://moodle.uni.edu@evil.com/x"));
         assert!(!same_origin(site, "http://moodle.uni.edu/x"));
         assert!(!same_origin(site, "not a url"));
+    }
+    #[test]
+    fn pending_login_survives_a_restart() {
+        let dir = std::env::temp_dir().join(format!("moodledesk-test-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        assert_eq!(take_pending(&dir), None); // nothing started yet
+        save_pending(&dir, "https://moodle.uni.edu/mycampus", "abc123").unwrap();
+        assert_eq!(take_pending(&dir), Some(("https://moodle.uni.edu/mycampus".into(), "abc123".into())));
+        assert_eq!(take_pending(&dir), None); // one attempt answers one callback
+        std::fs::remove_dir_all(&dir).unwrap();
     }
     #[test]
     fn https_only() {

@@ -33,7 +33,9 @@ reqwest = { version = "0.12", features = ["json"] }
 # Android: the system's OpenSSL isn't available to cross-compile against, so use rustls (bundled root certificates).
 [target.'cfg(target_os = "android")'.dependencies]
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+# opening a file in another app, and keeping the login in the Android Keystore (see MOBILE.md)
+tauri-plugin-android-native = { path = "plugins/android-native" }
 
-# Phones: the official opener plugin can only open URLs there, so a saved file is handed to the share sheet instead.
-[target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
+# iOS: the share sheet is how a file gets opened in another app
+[target.'cfg(target_os = "ios")'.dependencies]
 tauri-plugin-sharekit = "0.3"

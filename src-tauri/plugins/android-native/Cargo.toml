@@ -1,0 +1,13 @@
+[package]
+name = "tauri-plugin-android-native"
+version = "0.1.0"
+edition = "2021"
+description = "Android-only helpers Rust cannot do itself: open a file in another app, keep the login in the Android Keystore"
+links = "tauri-plugin-android-native"
+
+[dependencies]
+tauri = "2"
+serde = { version = "1", features = ["derive"] }
+
+[build-dependencies]
+tauri-plugin = { version = "2", features = ["build"] }
