@@ -1,6 +1,13 @@
 # MoodleDesk on Android and iOS
 
-This branch (`mobile`) makes the same app run on phones and tablets. Tablets (600 px wide and up) keep the sidebar; phones get a bottom navigation bar.
+The same app runs on Android phones and tablets. Tablets (600 px wide and up) keep the sidebar; phones get a bottom navigation bar.
+
+## Status
+
+| Platform | State |
+| --- | --- |
+| **Android** | Works. Released as a signed `.apk` on the GitHub releases page (Android 7.0 or newer). |
+| **iOS** | **Not supported yet.** The iOS project and its Swift plugin are in the repo as groundwork, but the iOS build has known bugs and has not been run, so there is no iOS download, no CI job and no App Store or TestFlight build. See [iOS](#ios). |
 
 ## Build it
 
@@ -9,12 +16,11 @@ You need the usual Tauri mobile setup: <https://v2.tauri.app/start/prerequisites
 ```
 npm install
 npm run tauri android init      # once; creates src-tauri/gen/android
-npm run tauri ios init          # once, on a Mac; creates src-tauri/gen/apple
-npm run tauri android dev       # or: npm run tauri ios dev
-npm run tauri android build     # or: npm run tauri ios build
+npm run tauri android dev
+npm run tauri android build
 ```
 
-Commit `src-tauri/gen/android` and `src-tauri/gen/apple` after the first `init`. For iOS set your team in `APPLE_DEVELOPMENT_TEAM` (or `bundle.iOS.developmentTeam`).
+`src-tauri/gen/android` is already committed, so `android init` is only needed on a fresh checkout without it. (`npm run tauri ios init`, `ios dev` and `ios build` exist too, but iOS does not work yet; see [iOS](#ios).)
 
 ## What had to change, and why
 
@@ -56,9 +62,29 @@ Then `npm run tauri android build -- --apk --target aarch64` gives a signed `app
 
 For GitHub (`.github/workflows/release.yml`, on every `v*` tag), add three repository secrets under Settings → Secrets and variables → Actions: `ANDROID_KEY_ALIAS` (`moodledesk`), `ANDROID_KEY_PASSWORD`, and `ANDROID_KEY_BASE64` (the output of `base64 -w0 ~/moodledesk-release.jks`; on a Mac `base64 -i ~/moodledesk-release.jks`). The workflow adds the signed APK to the draft release.
 
+## Android notes
+
+- **Android 7.0 or newer** (API 24). The release APK contains 64-bit and 32-bit ARM code, which is every current phone and tablet. It does not run on x86 emulator images; use an ARM image or a real device.
+- **Installing.** The release is an `.apk`, not a Play Store listing. The first time, Android asks you to allow installs from the browser or file manager you used. Allow it for that one install.
+- **Updating.** The app never updates itself and never prompts about new versions on a phone. To update, download the newer `.apk` from the releases page and install it over the old one. This only works because every APK is signed with the same key (see below); an APK signed with a different key has to be installed after uninstalling the old app, which also deletes its saved login and files.
+- **Your login** is encrypted with a key that never leaves the Android Keystore. If the phone is restored from a backup or its lock screen is reset, that key is gone and you simply sign in again.
+- **Files stay inside the app.** They are removed on uninstall and are not shown in the Files app. Opening one hands a copy to another app, and the copy stays in the app's cache until Android clears it.
+- **Browser sign-in.** Android may close MoodleDesk while the browser login is open. The login attempt is kept on disk, so the sign-in still completes when the link brings the app back.
+- **Back button.** Back goes up one level (from a course to the course list) before it leaves the app.
+- **https only.** Release builds refuse plain `http://` sites and traffic. Debug builds allow it so the dev server works.
+- **Launcher icon.** The adaptive icon is the app's `M` and bookmark, in the pine green `#1F5C4A`, so it keeps the same look under every launcher mask. The files live in `src-tauri/icons/android` and are copied into `src-tauri/gen/android/app/src/main/res`. `npx tauri icon` rewrites the first folder with a stock foreground, so after running it check the icon again (and copy it into `res`; the generated project is committed and is not refreshed by `tauri icon`).
+
+## iOS
+
+Not supported yet. What is in the repo:
+
+- `src-tauri/gen/apple`: the Xcode project made by `tauri ios init`.
+- `src-tauri/plugins/ios-native`: a small Swift plugin that shows a downloaded file in Quick Look, the system viewer, whose Share button has "Open in…" and "Save to Files". Login is kept in the iOS Keychain through the same `keyring` code as on the desktop.
+
+None of it has been run: the iOS build has bugs that are still open. The release workflow has no iOS job, `bundle.iOS.developmentTeam` is not set, and nothing is signed for Apple. To pick it up you need a Mac with Xcode and an Apple Developer account, your team ID in `APPLE_DEVELOPMENT_TEAM`, and then to fix the build before anything else.
+
 ## Known limits
 
-- **Not run on a device or emulator.** The desktop build and tests pass. The Android-only and iOS-only Rust (the two plugins, Keystore storage, file opening) type-checks against the real Android and iOS targets. The Kotlin and the Swift only parse: nobody has run Gradle or Xcode on them. The layout was rendered in WebKit at phone, tablet and desktop sizes.
-- **Files stay inside the app.** They are removed on uninstall and are not shown in the Files app. Opening one hands a copy to another app, and the copy stays in the app's cache until Android clears it.
+- **Android has been tested on a phone; iOS has not been tested at all.** The iOS-only Rust type-checks against the real iOS target and the Swift only parses; none of it has been run. The layout was also rendered in WebKit at phone, tablet and desktop sizes.
 - **A login attempt does not expire.** It is replaced by the next attempt and deleted when its callback arrives. The passport in it is random and is only useful together with a callback signed by your Moodle site.
 - **Stores need a privacy policy link.** Use `PRIVACY.md`, and update it if a store build adds anything.

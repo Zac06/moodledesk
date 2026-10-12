@@ -3,43 +3,55 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MoodleDesk: a desktop app for Moodle</title>
-<meta name="description" content="MoodleDesk is a free desktop client for Moodle on Linux, Windows and macOS. Browse your courses, read assignments and download files without opening the website.">
+<title>MoodleDesk: Moodle on your desktop and your Android phone</title>
+<meta name="description" content="MoodleDesk is a free client for Moodle on Linux, Windows, macOS and Android. Browse your courses, read assignments and download files without opening the website.">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preload" href="fonts/source-sans-3-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-:root{--bg:#eceeed;--card:#f8f9f8;--fg:#1d2522;--mut:#566360;--line:#d1d7d4;--acc:#1f5c4a;--accfg:#1f5c4a;--accon:#fff;--r:6px;
---sans:system-ui,"Segoe UI Variable Text","Segoe UI",Roboto,"Helvetica Neue",sans-serif;--serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua","URW Palladio L",P052,Georgia,serif;color-scheme:light}
-@media(prefers-color-scheme:dark){:root{--bg:#161b19;--card:#1c2220;--fg:#e3e8e5;--mut:#94a19b;--line:#2c3531;--acc:#6fbf9f;--accfg:#7cc9a8;--accon:#10231b;color-scheme:dark}}
+@font-face{font-family:"Source Sans 3";src:url(fonts/source-sans-3-latin-wght-normal.woff2) format("woff2");font-weight:200 900;font-style:normal;font-display:swap}
+:root{--bg:#f6f7f6;--stripe:#e6eae8;--fg:#1d2522;--mut:#515e5a;--line:#d1d7d4;--acc:#1f5c4a;--accfg:#1f5c4a;--accon:#fff;--bezel:#17211d;--r:6px;
+--sans:"Source Sans 3",system-ui,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;--serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua","URW Palladio L",P052,Georgia,serif;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#161b19;--stripe:#202825;--fg:#e3e8e5;--mut:#9aa7a1;--line:#2c3531;--acc:#6fbf9f;--accfg:#7cc9a8;--accon:#10231b;--bezel:#0c110f;color-scheme:dark}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 var(--sans)}
+body{margin:0;background:var(--bg);color:var(--fg);font:18px/1.65 var(--sans);-webkit-text-size-adjust:100%}
 a{color:var(--accfg);text-underline-offset:3px}
+code{font:.88em ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--stripe);padding:.1em .4em;border-radius:3px}
 :focus-visible{outline:2px solid var(--accfg);outline-offset:3px}
 .wrap{max-width:1080px;margin:0 auto;padding:0 28px}
 header{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
 .brand{display:flex;align-items:center;gap:12px;font:600 22px var(--serif);color:var(--fg);text-decoration:none}
 .brand img{width:36px;height:36px}
-header nav a{margin-left:22px;color:var(--mut);text-decoration:none}header nav a:hover{color:var(--fg)}
+header nav a{margin-left:22px;color:var(--mut);text-decoration:none;white-space:nowrap}header nav a:hover{color:var(--fg)}
 .hero{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:56px;align-items:center;padding:56px 0 72px}
 h1{font:600 clamp(36px,5vw,54px)/1.08 var(--serif);margin:0 0 20px}
-.lede{max-width:46ch;margin:0 0 28px;font-size:18px}
+.lede{max-width:46ch;margin:0 0 28px;font-size:20px}
 .btn{display:inline-block;background:var(--acc);color:var(--accon);padding:13px 22px;border-radius:var(--r);font-weight:600;text-decoration:none}
 .btn:hover{filter:brightness(1.08)}
-.meta{margin:12px 0 0;color:var(--mut);font-size:14px}
+.meta{margin:12px 0 0;color:var(--mut);font-size:16px}
+.stage{position:relative;padding-bottom:48px}
 .shot{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:var(--r)}
+.phone{position:absolute;right:3%;bottom:0;width:30%;max-width:210px;margin:0;padding:6px;background:var(--bezel);border-radius:9% / 4.2%;box-shadow:0 18px 40px -14px rgba(10,20,16,.45)}
+.phone img{display:block;width:100%;height:auto;border-radius:7.5% / 3.5%}
+.phone::after{content:"";position:absolute;top:2.6%;left:50%;width:4.5%;aspect-ratio:1;transform:translateX(-50%);background:var(--bezel);border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.12)}
 section{padding:48px 0;border-top:1px solid var(--line)}
-h2{font:600 28px/1.2 var(--serif);margin:0 0 24px}
-.rows{display:grid;grid-template-columns:minmax(150px,1fr) 3fr;gap:0 40px;margin:0}
-.rows dt,.rows dd{padding:16px 0;border-top:1px solid var(--line);margin:0}
-.rows dt:first-of-type,.rows dt:first-of-type+dd{border-top:0;padding-top:0}
-.rows dt{font:600 18px var(--serif)}
-.rows dd{max-width:62ch}
-.files{list-style:none;margin:0;padding:0;max-width:640px}
-.files li{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid var(--line)}
-.files li:first-child{border-top:0}
-.files small{color:var(--mut)}
-.platform{font:600 18px var(--serif);margin:28px 0 8px}.platform:first-child{margin-top:0}
-footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--mut);font-size:14px}
-@media(max-width:860px){.hero{grid-template-columns:1fr;gap:36px;padding-top:24px}.rows{grid-template-columns:1fr}.rows dt{padding-bottom:0;border-top:1px solid var(--line)}.rows dd{border-top:0;padding-top:4px}.rows dt:first-of-type{border-top:0}}
+h2{font:600 30px/1.2 var(--serif);margin:0 0 24px}
+.rows,.files{margin:0;padding:0;list-style:none;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.rows>div,.files li{background:var(--bg)}
+.rows>div:nth-child(even),.files li:nth-child(even){background:var(--stripe)}
+.rows>div{display:grid;grid-template-columns:minmax(150px,1fr) 3fr;gap:0 40px;padding:18px 24px}
+.rows dt{font:600 19px/1.4 var(--serif)}
+.rows dd{margin:0;max-width:62ch}
+.platform{font:600 21px var(--serif);margin:32px 0 10px}.platform:first-child{margin-top:0}
+.files{max-width:680px}
+.files li{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px}
+.files .f{display:flex;flex-direction:column;min-width:0}
+.files .f a{font-weight:600}
+.files small{color:var(--mut);font-size:15px}
+.files .f small{overflow-wrap:anywhere}
+.files .sz{white-space:nowrap}
+.note{margin:28px 0 0;color:var(--mut);font-size:16px}
+footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--mut);font-size:15px}
+@media(max-width:860px){header nav a{margin-left:16px}.hero{grid-template-columns:1fr;gap:36px;padding-top:24px}.rows>div{grid-template-columns:1fr;gap:4px;padding:16px 18px}.files li{padding:14px 18px}.phone{width:34%}}
 </style>
 </head>
 <body>
@@ -52,37 +64,42 @@ footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--mut);fon
 <main>
 <div class="hero">
   <div>
-    <h1>Your Moodle courses, on your desktop.</h1>
-    <p class="lede">MoodleDesk is a free desktop app for Moodle. Open your courses, read assignments and save course files without loading the website each time.</p>
+    <h1>Your Moodle courses, on your desktop and your phone.</h1>
+    <p class="lede">MoodleDesk is a free app for Moodle on Linux, Windows, macOS and Android. Open your courses, read assignments and save course files without loading the website each time.</p>
     <a class="btn" id="get" href="https://github.com/zac06/moodledesk/releases/latest">Download from GitHub</a>
-    <p class="meta" id="meta">Works on Linux, Windows and macOS.</p>
+    <p class="meta" id="meta">Works on Linux, Windows, macOS and Android.</p>
   </div>
-  <img class="shot" src="screenshot.png" width="1230" height="908" alt="MoodleDesk showing a grid of courses with a sidebar">
+  <div class="stage">
+    <img class="shot" src="screenshot.png" width="1230" height="908" alt="MoodleDesk on a computer, showing a grid of courses with a sidebar">
+    <figure class="phone"><img src="android.png" width="824" height="1784" alt="MoodleDesk on an Android phone, showing a list of courses with a navigation bar at the bottom"></figure>
+  </div>
 </div>
 
 <section>
   <h2>What you can do</h2>
   <dl class="rows">
-    <dt>Sign in</dt><dd>Enter your university's Moodle address. Single sign-on opens your institution's own login page in your browser, and you come straight back to the app. Plain username and password sites work too.</dd>
-    <dt>Browse courses</dt><dd>Filter by in progress, future, ended or favourites, search by name, and hide the courses you no longer need.</dd>
-    <dt>Read assignments</dt><dd>See due dates, descriptions, attachments, your submission status and grade. Locked assignments show when they open. To hand something in, the app opens the page in your browser, already logged in.</dd>
-    <dt>Keep your files</dt><dd>Files are saved in a folder per course and open in your usual PDF viewer or office app. By default a file is downloaded again only when your teacher has updated it.</dd>
-    <dt>Find more courses</dt><dd>Search the whole site by course, department or teacher and enrol yourself in courses that allow it.</dd>
-    <dt>Stay private</dt><dd>Your login is stored in the system keychain. MoodleDesk talks only to your Moodle site and to GitHub, to check for new versions.</dd>
+    <div><dt>Sign in</dt><dd>Enter your university's Moodle address. Single sign-on opens your institution's own login page in your browser, and you come straight back to the app. Plain username and password sites work too.</dd></div>
+    <div><dt>Browse courses</dt><dd>Filter by in progress, future, ended or favourites, search by name, and hide the courses you no longer need.</dd></div>
+    <div><dt>Read assignments</dt><dd>See due dates, descriptions, attachments, your submission status and grade. Locked assignments show when they open. To hand something in, the app opens the page in your browser, already logged in.</dd></div>
+    <div><dt>Keep your files</dt><dd>Files are saved in a folder per course and open in your usual PDF viewer or office app. By default a file is downloaded again only when your teacher has updated it. On Android, files stay inside MoodleDesk and open in the app you pick.</dd></div>
+    <div><dt>Find more courses</dt><dd>Search the whole site by course, department or teacher and enrol yourself in courses that allow it.</dd></div>
+    <div><dt>Stay private</dt><dd>Your login is stored in the system keychain, or encrypted with the Android Keystore on a phone. MoodleDesk talks only to your Moodle site. On a computer it also asks GitHub whether a new version is out.</dd></div>
   </dl>
 </section>
 
 <section id="downloads">
   <h2>Downloads</h2>
   <div id="list"><p>Loading the latest version…</p></div>
+  <p class="note">iPhone and iPad are not supported yet.</p>
 </section>
 
 <section>
   <h2>First launch</h2>
   <dl class="rows">
-    <dt>Windows</dt><dd>The installer is not code-signed yet, so SmartScreen may warn you. Choose More info, then Run anyway.</dd>
-    <dt>macOS</dt><dd>The app is not notarized yet. If macOS refuses to open it, right-click the app and choose Open, or allow it under System Settings, Privacy &amp; Security.</dd>
-    <dt>Linux</dt><dd>For the AppImage, make it executable first: <code>chmod +x MoodleDesk*.AppImage</code>. The .deb and .rpm packages install with your package manager.</dd>
+    <div><dt>Windows</dt><dd>The installer is not code-signed yet, so SmartScreen may warn you. Choose More info, then Run anyway.</dd></div>
+    <div><dt>macOS</dt><dd>The app is not notarized yet. If macOS refuses to open it, right-click the app and choose Open, or allow it under System Settings, Privacy &amp; Security.</dd></div>
+    <div><dt>Linux</dt><dd>For the AppImage, make it executable first: <code>chmod +x MoodleDesk*.AppImage</code>. The .deb and .rpm packages install with your package manager.</dd></div>
+    <div><dt>Android</dt><dd>Needs Android 7 or newer. Open the downloaded .apk file. The first time, Android asks you to allow installs from your browser or file manager: allow it for this one install. The app does not update itself, so to update, download the new .apk from this page and install it over the old one.</dd></div>
   </dl>
 </section>
 </main>
@@ -96,10 +113,11 @@ footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--mut);fon
   var kinds = [
     ["windows", "Windows", [[/setup\.exe$/i, "Installer (.exe)"], [/\.msi$/i, "MSI package"]]],
     ["mac", "macOS", [[/\.dmg$/i, "Disk image (.dmg), Intel and Apple silicon"]]],
-    ["linux", "Linux", [[/\.AppImage$/i, "AppImage, any distribution"], [/\.deb$/i, "Debian and Ubuntu (.deb)"], [/\.rpm$/i, "Fedora and openSUSE (.rpm)"]]]
+    ["linux", "Linux", [[/\.AppImage$/i, "AppImage, any distribution"], [/\.deb$/i, "Debian and Ubuntu (.deb)"], [/\.rpm$/i, "Fedora and openSUSE (.rpm)"]]],
+    ["android", "Android", [[/\.apk$/i, "Android 7 or newer (.apk)"]]]
   ];
   var ua = ((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "") + " " + navigator.userAgent;
-  var os = /Android|iPhone|iPad/i.test(ua) ? null : /Win/i.test(ua) ? "windows" : /Mac/i.test(ua) ? "mac" : /Linux|X11/i.test(ua) ? "linux" : null;
+  var os = /Android/i.test(ua) ? "android" : /iPhone|iPad/i.test(ua) ? null : /Win/i.test(ua) ? "windows" : /Mac/i.test(ua) ? "mac" : /Linux|X11/i.test(ua) ? "linux" : null;
   var mb = function (b) { return Math.max(1, Math.round(b / 1048576)) + " MB"; };
   var el = function (tag, text, cls) { var e = document.createElement(tag); if (text) e.textContent = text; if (cls) e.className = cls; return e; };
   var list = document.getElementById("list");
@@ -124,8 +142,9 @@ footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--mut);fon
         list.appendChild(el("h3", k[1], "platform"));
         var ul = el("ul", "", "files");
         rows.forEach(function (r) {
-          var li = el("li"), a = el("a", r[1]); a.href = r[0].browser_download_url;
-          li.appendChild(a); li.appendChild(el("small", mb(r[0].size))); ul.appendChild(li);
+          var li = el("li"), f = el("span", "", "f"), a = el("a", r[1]); a.href = r[0].browser_download_url;
+          f.appendChild(a); f.appendChild(el("small", r[0].name));
+          li.appendChild(f); li.appendChild(el("small", mb(r[0].size), "sz")); ul.appendChild(li);
         });
         list.appendChild(ul);
       });
@@ -137,7 +156,7 @@ footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--mut);fon
         btn.href = first.browser_download_url; btn.textContent = "Download for " + k[1];
         document.getElementById("meta").textContent = "Version " + rel.tag_name.replace(/^v/, "") + ", " + mb(first.size) + (date ? ", released " + date : "") + ".";
       } else {
-        document.getElementById("meta").textContent = "Version " + rel.tag_name.replace(/^v/, "") + (date ? ", released " + date : "") + ". For Linux, Windows and macOS.";
+        document.getElementById("meta").textContent = "Version " + rel.tag_name.replace(/^v/, "") + (date ? ", released " + date : "") + ". For Linux, Windows, macOS and Android.";
       }
     })
     .catch(fail);

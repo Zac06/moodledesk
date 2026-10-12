@@ -1,14 +1,18 @@
+<img src="docs/icon.png" width="96" alt="MoodleDesk logo">
+
 # MoodleDesk
 
-A native, cross-platform desktop client for [Moodle](https://moodle.org), built with [Tauri v2](https://tauri.app) and React. It talks to your institution's Moodle through the official mobile web service API, so it has its own UI. It is NOT a browser wrapper around the Moodle website.
+A native, cross-platform client for [Moodle](https://moodle.org) on the desktop and on Android, built with [Tauri v2](https://tauri.app) and React. It talks to your institution's Moodle through the official mobile web service API, so it has its own UI. It is NOT a browser wrapper around the Moodle website.
 
-Runs on **Linux, Windows and macOS**. (Mobile is covered by the official Moodle app.)
+Runs on **Linux, Windows, macOS and Android**. iOS is not supported yet (see [`MOBILE.md`](MOBILE.md)).
 
 Download page: <https://zac06.github.io/moodledesk/> (source in [`docs/`](docs), published with GitHub Pages).
 
-## Screenshot
+## Screenshots
 
 ![](docs/screenshot.png)
+
+<img src="docs/android.png" width="260" alt="MoodleDesk on Android">
 
 ## Features
 
@@ -18,12 +22,13 @@ Download page: <https://zac06.github.io/moodledesk/> (source in [`docs/`](docs),
 - **Course contents**: sections, resources, folders and links.
 - **Assignments**: assignments in a course show their due date. Open one for the description, attachments, submission status and grade. Submitting happens in the browser.
 - **Explore**: search all courses on the site by course name, department and teacher, and self-enrol (with an enrolment key if required). Other enrolment methods are finished in the browser.
-- **Downloads**: files are saved to `Downloads/MoodleDesk` (or a folder you choose in Settings), organised by course, and opened with the system default application. You choose whether to re-download only when Moodle's copy is newer (default), always reuse the saved copy, or always download again.
+- **Downloads**: files are saved to `Downloads/MoodleDesk` (or a folder you choose in Settings), organised by course, and opened with the system default application. On Android they stay in the app's own storage and open in the app you pick. You choose whether to re-download only when Moodle's copy is newer (default), always reuse the saved copy, or always download again.
 - **Settings**: theme (system, light, dark), high contrast, download folder and behaviour, and a list of the files MoodleDesk saved, which you can delete per file, per course or all at once.
 - **Links**: course links open inside the app; other links open in your browser, already logged in when the site allows it.
-- **Update notice**: the app checks GitHub for a newer release and shows a banner with a download link.
+- **Update notice** (desktop): the app checks GitHub for a newer release and shows a banner with a download link. On Android, download the newer `.apk` from the releases page and install it over the old one.
+- **Android**: the same app on phones and tablets, with a bottom navigation bar on phones, the Android back button, and a launcher icon that matches the desktop app.
 - **First-run setup** for theme and contrast.
-- **Secure token storage** in the OS keychain (macOS Keychain, Windows Credential Manager, Secret Service on Linux).
+- **Secure token storage** in the OS keychain (macOS Keychain, Windows Credential Manager, Secret Service on Linux), or encrypted with a key in the Android Keystore.
 
 ## How it works
 
@@ -52,6 +57,7 @@ React UI  --invoke-->  Rust (Tauri commands)  --HTTPS-->  Moodle web service API
   - **Linux:** `libwebkit2gtk-4.1-dev build-essential libssl-dev libxdo-dev libayatana-appindicator3-dev librsvg2-dev patchelf`
   - **macOS:** `xcode-select --install`
   - **Windows:** Visual Studio C++ Build Tools
+  - **Android:** Android Studio with the NDK, JDK 21 and the Rust Android targets; see [`MOBILE.md`](MOBILE.md)
 
 ### Run
 
@@ -90,6 +96,14 @@ Installers are written to `src-tauri/target/release/bundle/`:
 | Windows | `.msi`, `-setup.exe`        |
 | macOS   | `.app`, `.dmg`              |
 
+### Android
+
+```bash
+npm run tauri android build -- --apk --target aarch64
+```
+
+The signed `app-universal-release.apk` is written to `src-tauri/gen/android/app/build/outputs/apk/universal/release/`. It runs on Android 7.0 and newer. For the signing key, local builds, the iOS status and other Android details, see [`MOBILE.md`](MOBILE.md).
+
 Tauri builds for the OS it runs on, so build each platform on its own OS or use CI. For macOS builds:
 
 - Apple Silicon and Intel: `npm run tauri build -- --target aarch64-apple-darwin` (or `x86_64-apple-darwin`)
@@ -103,13 +117,17 @@ The workflow in `.github/workflows/release.yml` uses [`tauri-apps/tauri-action`]
 git tag v0.1.0 && git push origin v0.1.0
 ```
 
+The same workflow also builds the Android APK (job `android`), signs it with the key stored in the repository secrets and attaches it to the same draft release, named `MoodleDesk_<tag>.apk`. The secrets it needs are listed in [`MOBILE.md`](MOBILE.md).
+
 Unsigned builds trigger warnings (Windows SmartScreen, macOS Gatekeeper). Distributing without warnings requires code signing, and notarization on macOS.
 
 ## Project structure
 
 ```
 moodledesk/
-├─ .github/workflows/      release build for Linux, Windows and macOS
+├─ .github/workflows/      release build for Linux, Windows, macOS and Android
+├─ docs/                   download website (GitHub Pages), logo and screenshots
+├─ MOBILE.md               Android build, signing, iOS status
 ├─ src/                    React + TypeScript frontend
 │  ├─ App.tsx              UI: first-run setup, login, sidebar, course grid,
 │  │                       course view, Explore, Settings, update banner
@@ -121,6 +139,10 @@ moodledesk/
    │                       web-service calls, downloads, browser launching,
    │                       update check, keychain session
    ├─ capabilities/        Tauri permissions (opener, deep-link, dialog)
+   ├─ plugins/             small native plugins (Android: Keystore, open file;
+   │                       iOS: Quick Look, not working yet)
+   ├─ gen/android/         the Android Studio project
+   ├─ icons/               app icons for every platform
    ├─ tauri.conf.json      app config, bundle icons, deep-link scheme
    └─ Cargo.toml
 ```
@@ -135,7 +157,8 @@ moodledesk/
 | `ws_call`                | Generic Moodle web-service call                             |
 | `download_file`          | Download a file (token added in Rust), then open it         |
 | `list_downloads` / `delete_downloads` | List or delete the files MoodleDesk saved      |
-| `default_download_dir`   | Default folder (`Downloads/MoodleDesk`)                     |
+| `default_download_dir`   | Default folder (`Downloads/MoodleDesk`; the app's own storage on Android) |
+| `is_mobile`              | Lets the UI hide what a phone cannot do                     |
 | `open_local` / `open_external` | Open a saved file or a web link with the system default |
 | `open_authed`            | Open a site URL in the browser, logged in via auto-login key |
 | `check_update`           | Compare the latest GitHub release with the running version  |
@@ -144,6 +167,7 @@ moodledesk/
 ## Known limitations
 
 - Only browser-based SSO is supported (see the Moodle requirements above).
+- Android only: no Play Store listing, no automatic updates, and ARM devices only (no x86 emulator). iOS is not supported yet.
 - Files are downloaded in one request, held in memory and then written to disk, without a progress indicator.
 - Hiding courses relies on Moodle allowing the preference update through the mobile service. Some sites may block it.
 - Assignments are read-only (submitting opens the browser). Calendar, forums, grades and messaging are not implemented yet; those activities open in the browser.
