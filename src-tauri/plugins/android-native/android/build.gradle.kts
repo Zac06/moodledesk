@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "app.moodledesk.androidnative"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 24 // the Keystore API used here needs 23; Tauri apps start at 24
