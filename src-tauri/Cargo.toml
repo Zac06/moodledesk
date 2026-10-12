@@ -36,6 +36,6 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "rus
 # opening a file in another app, and keeping the login in the Android Keystore (see MOBILE.md)
 tauri-plugin-android-native = { path = "plugins/android-native" }
 
-# iOS: the share sheet is how a file gets opened in another app
+# iOS: previewing a file in the system viewer (Quick Look)
 [target.'cfg(target_os = "ios")'.dependencies]
-tauri-plugin-sharekit = "0.3"
+tauri-plugin-ios-native = { path = "plugins/ios-native" }

@@ -24,7 +24,7 @@ Commit `src-tauri/gen/android` and `src-tauri/gen/apple` after the first `init`.
 | Single-instance plugin is desktop-only | Only registered (and only compiled) on desktop |
 | `keyring` has no Android backend | Android encrypts the login with a key that stays in the Android Keystore (secure hardware where the phone has it) and stores only the ciphertext, so backups of it are useless; iOS still uses the Keychain (`secret` in `lib.rs`, `plugins/android-native`) |
 | OpenSSL can't be cross-compiled for Android | `reqwest` uses rustls on Android |
-| The opener plugin only opens URLs on mobile, so downloaded files could not be opened | Android: the file is opened with the app the user picks, from the system's "open with" list (`plugins/android-native`). iOS: the share sheet (`tauri-plugin-sharekit`) |
+| The opener plugin only opens URLs on mobile, so downloaded files could not be opened | Android: the file is opened with the app the user picks, from the system's "open with" list (`plugins/android-native`). iOS: the file is previewed in Quick Look, the system viewer, whose Share button has "Open in…" and "Save to Files" (`plugins/ios-native`) |
 | No user-visible Downloads folder, no folder picker | Files go to the app's own storage; the "Download folder" setting is hidden |
 | Browser SSO returns through `moodledesk://` | The scheme is registered for Android and iOS in `tauri.conf.json` |
 | The system can close the app while the browser login is open | The login attempt is saved on disk and read back when the link returns. A link that starts the app from scratch is not delivered as an event, so the app asks for it at startup (`get_current`). The handler runs off the UI thread, which would otherwise freeze Android |
@@ -36,8 +36,7 @@ Commit `src-tauri/gen/android` and `src-tauri/gen/apple` after the first `init`.
 
 ## Known limits
 
-- **Not run on a device or emulator.** The desktop build and tests pass. The Android-only Rust (the plugin, Keystore storage, file opening) type-checks against the real Android target. The Kotlin only parses: nobody has run Gradle on it. The iOS code is not compile-checked. The layout was rendered in WebKit at phone, tablet and desktop sizes.
+- **Not run on a device or emulator.** The desktop build and tests pass. The Android-only and iOS-only Rust (the two plugins, Keystore storage, file opening) type-checks against the real Android and iOS targets. The Kotlin and the Swift only parse: nobody has run Gradle or Xcode on them. The layout was rendered in WebKit at phone, tablet and desktop sizes.
 - **Files stay inside the app.** They are removed on uninstall and are not shown in the Files app. Opening one hands a copy to another app, and the copy stays in the app's cache until Android clears it.
-- **iOS opens a file through the share sheet**, not a viewer list.
 - **A login attempt does not expire.** It is replaced by the next attempt and deleted when its callback arrives. The passport in it is random and is only useful together with a callback signed by your Moodle site.
 - **Stores need a privacy policy link.** Use `PRIVACY.md`, and update it if a store build adds anything.

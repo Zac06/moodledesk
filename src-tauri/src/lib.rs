@@ -8,7 +8,7 @@ use tauri_plugin_opener::OpenerExt;
 #[cfg(target_os = "android")]
 use tauri_plugin_android_native::AndroidNativeExt;
 #[cfg(target_os = "ios")]
-use tauri_plugin_sharekit::ShareExt;
+use tauri_plugin_ios_native::IosNativeExt;
 
 const SERVICE: &str = "moodle_mobile_app";
 const SCHEME: &str = "moodledesk";
@@ -397,17 +397,14 @@ fn launch(app: &AppHandle, target: &str) -> Result<(), String> {
 }
 
 /// The opener plugin can only open URLs on a phone, so a saved file goes to the app the user picks (Android's "open with"
-/// list) or to the share sheet (iOS: "Open in…", "Save to Files").
+/// list) or to the system viewer (iOS: Quick Look, whose Share button has "Open in…" and "Save to Files").
 #[cfg(target_os = "android")]
 fn open_file(app: &AppHandle, path: &str) -> Result<(), String> {
     app.android_native().open_file(path)
 }
 #[cfg(target_os = "ios")]
 fn open_file(app: &AppHandle, path: &str) -> Result<(), String> {
-    let w = app.get_webview_window("main").ok_or("No window")?;
-    app.share()
-        .share_file(w, path.to_string(), Default::default())
-        .map_err(|e| e.to_string())
+    app.ios_native().open_file(path)
 }
 #[cfg(desktop)]
 fn open_file(app: &AppHandle, path: &str) -> Result<(), String> {
@@ -795,7 +792,7 @@ pub fn run() {
     }
     #[cfg(target_os = "ios")]
     {
-        app = app.plugin(tauri_plugin_sharekit::init());
+        app = app.plugin(tauri_plugin_ios_native::init());
     }
     app.plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_opener::init())
