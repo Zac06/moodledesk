@@ -34,6 +34,28 @@ Commit `src-tauri/gen/android` and `src-tauri/gen/apple` after the first `init`.
 | Android back button closed the app | Each open course is a history entry, so back goes up one level (`src/courseStack.ts`) |
 | Sign out lived in the sidebar | On phones it is in Settings → Account |
 
+## Signing the Android APK
+
+Android refuses to install an unsigned APK, and every update has to be signed with the same key. Make the key once:
+
+```
+keytool -genkey -v -keystore ~/moodledesk-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias moodledesk
+```
+
+Use one password for the keystore and the key. **Back the file up** (and the password): with a new key, phones that have the app installed must uninstall it before they can update. Never put it in the repo.
+
+For builds on your machine, create `src-tauri/gen/android/keystore.properties` (already git-ignored):
+
+```
+keyAlias=moodledesk
+password=the-password
+storeFile=/home/you/moodledesk-release.jks
+```
+
+Then `npm run tauri android build -- --apk --target aarch64` gives a signed `app-universal-release.apk` in `src-tauri/gen/android/app/build/outputs/apk/universal/release/`. Without that file the build still works and the release APK is simply unsigned.
+
+For GitHub (`.github/workflows/release.yml`, on every `v*` tag), add three repository secrets under Settings → Secrets and variables → Actions: `ANDROID_KEY_ALIAS` (`moodledesk`), `ANDROID_KEY_PASSWORD`, and `ANDROID_KEY_BASE64` (the output of `base64 -w0 ~/moodledesk-release.jks`; on a Mac `base64 -i ~/moodledesk-release.jks`). The workflow adds the signed APK to the draft release.
+
 ## Known limits
 
 - **Not run on a device or emulator.** The desktop build and tests pass. The Android-only and iOS-only Rust (the two plugins, Keystore storage, file opening) type-checks against the real Android and iOS targets. The Kotlin and the Swift only parse: nobody has run Gradle or Xcode on them. The layout was rendered in WebKit at phone, tablet and desktop sizes.
