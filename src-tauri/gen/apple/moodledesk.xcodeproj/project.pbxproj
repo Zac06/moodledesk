@@ -1,0 +1,462 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		078C35951578A66C9417B7A4 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0235BBC769E32D60020CAAEA /* UIKit.framework */; };
+		19FF3CB64D4276D4762EFECF /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 25CA2897B3614559ADA247E3 /* CoreGraphics.framework */; };
+		1D8459889EC6538924B28578 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49259F10FE5FF6806FFF11AA /* QuartzCore.framework */; };
+		34062A870BA0E18F07B89CBA /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 788EF8978B1DB13FB05C4350 /* main.mm */; };
+		3F7C21A8F3D6A03E7F78A81A /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D637761A3654BD69AF55AC6 /* Metal.framework */; };
+		45CB6FD22AF53CAAC530FAC4 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B673F11A529AA375E3BB7DC8 /* WebKit.framework */; };
+		6C4E86458947B6DC0BEEBCEA /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F920E091A427C8541603EBD /* MetalKit.framework */; };
+		78107BADD9466BF23719BFB5 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 42CC3A0914D5D80E5B066C9F /* assets */; };
+		9C7A625267F0FC1037F008C1 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C8D41C335C083181B82E757F /* Security.framework */; };
+		9D1F6A3307BBF9CC68D2AF31 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FAD8E1F1CBA002E4531FF9B8 /* LaunchScreen.storyboard */; };
+		B036CFA337B7EEEA5A0C2BB9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A531B9FB515F4E45C90D9181 /* Assets.xcassets */; };
+		EEA423A548B6E3F2A01D987C /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 962FCF4EB1ED06BB4488EAC2 /* libapp.a */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0235BBC769E32D60020CAAEA /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		1D637761A3654BD69AF55AC6 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		25CA2897B3614559ADA247E3 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		2713285772ED2AEAFAC830D6 /* lib.rs */ = {isa = PBXFileReference; path = lib.rs; sourceTree = "<group>"; };
+		370EA86AED71EB3F9245B2B0 /* moodledesk_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = moodledesk_iOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		42CC3A0914D5D80E5B066C9F /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
+		45D0EDBA32033AC3904D65EC /* moodledesk_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = moodledesk_iOS.entitlements; sourceTree = "<group>"; };
+		49259F10FE5FF6806FFF11AA /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		49903A21E87B69B0A0B84F5F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		6F920E091A427C8541603EBD /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		788EF8978B1DB13FB05C4350 /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
+		81447F649BB24AB7478AFB9E /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
+		962FCF4EB1ED06BB4488EAC2 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
+		A531B9FB515F4E45C90D9181 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AC182088889C7E8A7C58903E /* main.rs */ = {isa = PBXFileReference; path = main.rs; sourceTree = "<group>"; };
+		B673F11A529AA375E3BB7DC8 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		C8D41C335C083181B82E757F /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		FAD8E1F1CBA002E4531FF9B8 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6A8EB250484322F50C708AA7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EEA423A548B6E3F2A01D987C /* libapp.a in Frameworks */,
+				19FF3CB64D4276D4762EFECF /* CoreGraphics.framework in Frameworks */,
+				3F7C21A8F3D6A03E7F78A81A /* Metal.framework in Frameworks */,
+				6C4E86458947B6DC0BEEBCEA /* MetalKit.framework in Frameworks */,
+				1D8459889EC6538924B28578 /* QuartzCore.framework in Frameworks */,
+				9C7A625267F0FC1037F008C1 /* Security.framework in Frameworks */,
+				078C35951578A66C9417B7A4 /* UIKit.framework in Frameworks */,
+				45CB6FD22AF53CAAC530FAC4 /* WebKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0C2CB3AC2BD5197E16803367 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				25CA2897B3614559ADA247E3 /* CoreGraphics.framework */,
+				962FCF4EB1ED06BB4488EAC2 /* libapp.a */,
+				1D637761A3654BD69AF55AC6 /* Metal.framework */,
+				6F920E091A427C8541603EBD /* MetalKit.framework */,
+				49259F10FE5FF6806FFF11AA /* QuartzCore.framework */,
+				C8D41C335C083181B82E757F /* Security.framework */,
+				0235BBC769E32D60020CAAEA /* UIKit.framework */,
+				B673F11A529AA375E3BB7DC8 /* WebKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		2F1FDDA3CB8E11FA1ED05F27 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				BAC62EA804F3DC07285C1D90 /* moodledesk */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		3A4BA18FDC49C7C9DF0DFBF6 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				2713285772ED2AEAFAC830D6 /* lib.rs */,
+				AC182088889C7E8A7C58903E /* main.rs */,
+			);
+			name = src;
+			path = ../../src;
+			sourceTree = "<group>";
+		};
+		5ECC4BB700DE7470E4C04A50 /* Externals */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Externals;
+			sourceTree = "<group>";
+		};
+		69A2A0D99DF2EBA29C7B6FAB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				370EA86AED71EB3F9245B2B0 /* moodledesk_iOS.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		999A910E066658708592EB54 /* moodledesk_iOS */ = {
+			isa = PBXGroup;
+			children = (
+				49903A21E87B69B0A0B84F5F /* Info.plist */,
+				45D0EDBA32033AC3904D65EC /* moodledesk_iOS.entitlements */,
+			);
+			path = moodledesk_iOS;
+			sourceTree = "<group>";
+		};
+		BAC62EA804F3DC07285C1D90 /* moodledesk */ = {
+			isa = PBXGroup;
+			children = (
+				788EF8978B1DB13FB05C4350 /* main.mm */,
+				E4C21F3E9F5DFC7C48798300 /* bindings */,
+			);
+			path = moodledesk;
+			sourceTree = "<group>";
+		};
+		BC2828C96C50BA59B7686EF3 = {
+			isa = PBXGroup;
+			children = (
+				42CC3A0914D5D80E5B066C9F /* assets */,
+				A531B9FB515F4E45C90D9181 /* Assets.xcassets */,
+				FAD8E1F1CBA002E4531FF9B8 /* LaunchScreen.storyboard */,
+				5ECC4BB700DE7470E4C04A50 /* Externals */,
+				999A910E066658708592EB54 /* moodledesk_iOS */,
+				2F1FDDA3CB8E11FA1ED05F27 /* Sources */,
+				3A4BA18FDC49C7C9DF0DFBF6 /* src */,
+				0C2CB3AC2BD5197E16803367 /* Frameworks */,
+				69A2A0D99DF2EBA29C7B6FAB /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E4C21F3E9F5DFC7C48798300 /* bindings */ = {
+			isa = PBXGroup;
+			children = (
+				81447F649BB24AB7478AFB9E /* bindings.h */,
+			);
+			path = bindings;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		302988A6FB1C24AD294C96C8 /* moodledesk_iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 95E389BF24E7D1C07EAC3E82 /* Build configuration list for PBXNativeTarget "moodledesk_iOS" */;
+			buildPhases = (
+				F06B3E52F7C07946B04D89B7 /* Build Rust Code */,
+				254EA0A8DBFE5E7164BBF87E /* Sources */,
+				1E24744F85352C876E459741 /* Resources */,
+				6A8EB250484322F50C708AA7 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = moodledesk_iOS;
+			packageProductDependencies = (
+			);
+			productName = moodledesk_iOS;
+			productReference = 370EA86AED71EB3F9245B2B0 /* moodledesk_iOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B85FDDF3CA828D326BE2D62D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = CB4B65367D39C12B0D6E8E54 /* Build configuration list for PBXProject "moodledesk" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = BC2828C96C50BA59B7686EF3;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 69A2A0D99DF2EBA29C7B6FAB /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				302988A6FB1C24AD294C96C8 /* moodledesk_iOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1E24744F85352C876E459741 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B036CFA337B7EEEA5A0C2BB9 /* Assets.xcassets in Resources */,
+				9D1F6A3307BBF9CC68D2AF31 /* LaunchScreen.storyboard in Resources */,
+				78107BADD9466BF23719BFB5 /* assets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		F06B3E52F7C07946B04D89B7 /* Build Rust Code */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build Rust Code";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Externals/x86_64/${CONFIGURATION}/libapp.a",
+				"$(SRCROOT)/Externals/arm64/${CONFIGURATION}/libapp.a",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "npm run -- tauri ios xcode-script -v --platform \"${PLATFORM_DISPLAY_NAME:?}\" --sdk-root \"${SDKROOT:?}\" --framework-search-paths \"${FRAMEWORK_SEARCH_PATHS:?}\" --header-search-paths \"${HEADER_SEARCH_PATHS:?}\" --gcc-preprocessor-definitions \"${GCC_PREPROCESSOR_DEFINITIONS:-}\" --configuration \"${CONFIGURATION:?}\" ${FORCE_COLOR} ${ARCHS:?}\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		254EA0A8DBFE5E7164BBF87E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				34062A870BA0E18F07B89CBA /* main.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		10F8DA66C4168BD9751B3AD2 /* release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = release;
+		};
+		7EB8C9416079893446E4B7CF /* release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ARCHS = (
+					arm64,
+					x86_64,
+				);
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = moodledesk_iOS/moodledesk_iOS.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\".\"",
+				);
+				INFOPLIST_FILE = moodledesk_iOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = app.moodledesk;
+				PRODUCT_NAME = "MoodleDesk";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALID_ARCHS = "arm64  x86_64";
+			};
+			name = release;
+		};
+		9C4846CC696AD5AC9F751DF5 /* debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ARCHS = (
+					arm64,
+					x86_64,
+				);
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = moodledesk_iOS/moodledesk_iOS.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\".\"",
+				);
+				INFOPLIST_FILE = moodledesk_iOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = app.moodledesk;
+				PRODUCT_NAME = "MoodleDesk";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALID_ARCHS = "arm64  x86_64";
+			};
+			name = debug;
+		};
+		D250404E04FDB14B857D631D /* debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		95E389BF24E7D1C07EAC3E82 /* Build configuration list for PBXNativeTarget "moodledesk_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9C4846CC696AD5AC9F751DF5 /* debug */,
+				7EB8C9416079893446E4B7CF /* release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = debug;
+		};
+		CB4B65367D39C12B0D6E8E54 /* Build configuration list for PBXProject "moodledesk" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D250404E04FDB14B857D631D /* debug */,
+				10F8DA66C4168BD9751B3AD2 /* release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B85FDDF3CA828D326BE2D62D /* Project object */;
+}
