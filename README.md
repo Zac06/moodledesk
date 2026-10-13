@@ -10,9 +10,7 @@ Download page: <https://zac06.github.io/moodledesk/> (source in [`docs/`](docs),
 
 ## Screenshots
 
-![](docs/screenshot.png)
-
-<img src="docs/android.png" width="260" alt="MoodleDesk on Android">
+![MoodleDesk on a laptop and on an Android phone](docs/mockup.png)
 
 ## Features
 
