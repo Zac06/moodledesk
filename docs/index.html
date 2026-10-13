@@ -9,9 +9,9 @@
 <link rel="preload" href="fonts/source-sans-3-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 @font-face{font-family:"Source Sans 3";src:url(fonts/source-sans-3-latin-wght-normal.woff2) format("woff2");font-weight:200 900;font-style:normal;font-display:swap}
-:root{--bg:#f6f7f6;--stripe:#e6eae8;--fg:#1d2522;--mut:#515e5a;--line:#d1d7d4;--acc:#1f5c4a;--accfg:#1f5c4a;--accon:#fff;--bezel:#17211d;--r:6px;
+:root{--bg:#f6f7f6;--stripe:#e6eae8;--fg:#1d2522;--mut:#515e5a;--line:#d1d7d4;--acc:#1f5c4a;--accfg:#1f5c4a;--accon:#fff;--r:6px;
 --sans:"Source Sans 3",system-ui,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;--serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua","URW Palladio L",P052,Georgia,serif;color-scheme:light}
-@media(prefers-color-scheme:dark){:root{--bg:#161b19;--stripe:#202825;--fg:#e3e8e5;--mut:#9aa7a1;--line:#2c3531;--acc:#6fbf9f;--accfg:#7cc9a8;--accon:#10231b;--bezel:#0c110f;color-scheme:dark}}
+@media(prefers-color-scheme:dark){:root{--bg:#161b19;--stripe:#202825;--fg:#e3e8e5;--mut:#9aa7a1;--line:#2c3531;--acc:#6fbf9f;--accfg:#7cc9a8;--accon:#10231b;color-scheme:dark}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:18px/1.65 var(--sans);-webkit-text-size-adjust:100%}
 a{color:var(--accfg);text-underline-offset:3px}
@@ -28,11 +28,7 @@ h1{font:600 clamp(36px,5vw,54px)/1.08 var(--serif);margin:0 0 20px}
 .btn{display:inline-block;background:var(--acc);color:var(--accon);padding:13px 22px;border-radius:var(--r);font-weight:600;text-decoration:none}
 .btn:hover{filter:brightness(1.08)}
 .meta{margin:12px 0 0;color:var(--mut);font-size:16px}
-.stage{position:relative;padding-bottom:48px}
-.shot{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:var(--r)}
-.phone{position:absolute;right:3%;bottom:0;width:30%;max-width:210px;margin:0;padding:6px;background:var(--bezel);border-radius:9% / 4.2%;box-shadow:0 18px 40px -14px rgba(10,20,16,.45)}
-.phone img{display:block;width:100%;height:auto;border-radius:7.5% / 3.5%}
-.phone::after{content:"";position:absolute;top:2.6%;left:50%;width:4.5%;aspect-ratio:1;transform:translateX(-50%);background:var(--bezel);border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.12)}
+.shot{width:100%;height:auto;display:block}
 section{padding:48px 0;border-top:1px solid var(--line)}
 h2{font:600 30px/1.2 var(--serif);margin:0 0 24px}
 .rows,.files{margin:0;padding:0;list-style:none;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
@@ -51,7 +47,7 @@ h2{font:600 30px/1.2 var(--serif);margin:0 0 24px}
 .files .sz{white-space:nowrap}
 .note{margin:28px 0 0;color:var(--mut);font-size:16px}
 footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--mut);font-size:15px}
-@media(max-width:860px){header nav a{margin-left:16px}.hero{grid-template-columns:1fr;gap:36px;padding-top:24px}.rows>div{grid-template-columns:1fr;gap:4px;padding:16px 18px}.files li{padding:14px 18px}.phone{width:34%}}
+@media(max-width:860px){header nav a{margin-left:16px}.hero{grid-template-columns:1fr;gap:36px;padding-top:24px}.rows>div{grid-template-columns:1fr;gap:4px;padding:16px 18px}.files li{padding:14px 18px}}
 </style>
 </head>
 <body>
@@ -69,10 +65,7 @@ footer{padding:32px 0 48px;border-top:1px solid var(--line);color:var(--mut);fon
     <a class="btn" id="get" href="https://github.com/zac06/moodledesk/releases/latest">Download from GitHub</a>
     <p class="meta" id="meta">Works on Linux, Windows, macOS and Android.</p>
   </div>
-  <div class="stage">
-    <img class="shot" src="screenshot.png" width="1230" height="908" alt="MoodleDesk on a computer, showing a grid of courses with a sidebar">
-    <figure class="phone"><img src="android.png" width="824" height="1784" alt="MoodleDesk on an Android phone, showing a list of courses with a navigation bar at the bottom"></figure>
-  </div>
+  <img class="shot" src="mockup.png" width="1414" height="1046" alt="MoodleDesk on a laptop, showing a grid of courses with a sidebar, next to an Android phone showing the course list with a navigation bar at the bottom">
 </div>
 
 <section>
