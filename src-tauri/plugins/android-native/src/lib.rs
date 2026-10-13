@@ -49,7 +49,7 @@ impl<R: Runtime, T: Manager<R>> AndroidNativeExt<R> for T {
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("android-native")
         .setup(|app, api| {
-            let handle = api.register_android_plugin("app.moodledesk.androidnative", "AndroidNativePlugin")?;
+            let handle = api.register_android_plugin("app.zenith.androidnative", "AndroidNativePlugin")?;
             app.manage(AndroidNative(handle));
             Ok(())
         })

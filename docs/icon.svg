@@ -1,15 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <!-- Pine cover, serif M cut as paths (no font dependency), sage bookmark ribbon -->
+  <!-- Pine tile; the sun's path (sage arc), a plumb line from the observer on the horizon, and the sun at its zenith -->
   <rect x="64" y="64" width="896" height="896" rx="200" fill="#1f5c4a"/>
-  <path fill="#7cc9a8" d="M696 64h76v176l-38-34-38 34z"/>
-  <g fill="#eef3f0">
-    <rect x="322" y="300" width="30" height="424"/>
-    <rect x="672" y="300" width="56" height="424"/>
-    <path d="M322 300h74l152 424h-74z"/>
-    <path d="M648 300h28L548 724h-28z"/>
-    <rect x="276" y="300" width="124" height="18"/>
-    <rect x="276" y="706" width="124" height="18"/>
-    <rect x="628" y="300" width="130" height="18"/>
-    <rect x="628" y="706" width="130" height="18"/>
-  </g>
+  <path d="M212 640A332 332 0 0 1 812 640" fill="none" stroke="#7cc9a8" stroke-width="36"/>
+  <path d="M168 640H856" stroke="#eef3f0" stroke-width="36" stroke-linecap="round"/>
+  <path d="M512 528V640" stroke="#eef3f0" stroke-width="18"/>
+  <circle cx="512" cy="450" r="80" fill="#eef3f0"/>
 </svg>

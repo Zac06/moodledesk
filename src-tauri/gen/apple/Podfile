@@ -1,13 +1,13 @@
 # Uncomment the next line to define a global platform for your project
 
-target 'moodledesk_iOS' do
+target 'zenith_iOS' do
 platform :ios, '15.0'
-  # Pods for moodledesk_iOS
+  # Pods for zenith_iOS
 end
 
-target 'moodledesk_macOS' do
+target 'zenith_macOS' do
 platform :osx, '11.0'
-  # Pods for moodledesk_macOS
+  # Pods for zenith_macOS
 end
 
 # Delete the deployment target for iOS and macOS, causing it to be inherited from the Podfile

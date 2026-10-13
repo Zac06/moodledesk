@@ -1,4 +1,4 @@
-// Screenshot mode (`moodledesk --screenshot`): invented data instead of the real Moodle site, so screenshots show nobody's real
+// Screenshot mode (`zenith --screenshot`): invented data instead of the real Moodle site, so screenshots show nobody's real
 // name or courses. Nothing is sent over the network and the saved login is never read or changed.
 import type { Course, Section, Assign, SearchCourse } from "./api";
 

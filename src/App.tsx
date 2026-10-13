@@ -58,7 +58,7 @@ function Login({ onDone }: { onDone: () => void }) {
   const connect = async () => { setMsg(""); setBusy(true); try { setSite(await api.resolveSite(url)); } catch (e) { setMsg(String(e)); } setBusy(false); };
   return (
     <div className="login">
-      <div className="hero"><div className="logo">M</div><h1>MoodleDesk</h1><p>Your Moodle courses and files, always at hand.</p></div>
+      <div className="hero"><h1>Zenith</h1><p>Your Moodle™ courses and files, always at hand.</p><p className="legal">Independent app, not affiliated with or endorsed by Moodle. The word Moodle and associated Moodle logos are trademarks or registered trademarks of Moodle Pty Ltd or its related affiliates.</p></div>
       <div className="panel">
         <h2>{site ? site.config.sitename : "Connect to your university"}</h2>
         {!site ? (<>
@@ -380,7 +380,7 @@ function Settings({ user, site, signOut, dir, pick, reset, mode, setMode, notify
                 <button className="icon" title="Delete" onClick={() => del([f.path])}><Icon n="trash" /></button>
               </div>))}
           </div>))}
-        {!!files?.length && <div className="setrow"><div className="grow muted">Only files MoodleDesk downloaded are listed or removed; anything else in your folder is never touched. Files saved by older versions aren't tracked.</div>
+        {!!files?.length && <div className="setrow"><div className="grow muted">Only files Zenith downloaded are listed or removed; anything else in your folder is never touched. Files saved by older versions aren't tracked.</div>
           <button className="btn danger" onClick={() => ask("all", () => del())}>{confirm === "all" ? "Click to confirm" : "Delete all downloads"}</button></div>}
       </section>
     </div>);
@@ -396,13 +396,12 @@ function Setup({ theme, setTheme, contrast, setContrast, onDone }: { theme: Them
       <button className="ghost skip" onClick={onDone}>Skip</button>
       <div className="setupcard">
         {step === 0 && (<>
-          <div className="logo sm big">M</div>
-          <h1>Welcome to MoodleDesk</h1>
+          <h1>Welcome to Zenith</h1>
           <p className="muted">Your courses and materials, always at hand. Let's set it up the way you like it. It takes a few seconds.</p>
         </>)}
         {step === 1 && (<>
           <h1>Choose your look</h1>
-          <p className="muted">Pick how MoodleDesk should appear. The whole window updates as you choose.</p>
+          <p className="muted">Pick how Zenith should appear. The whole window updates as you choose.</p>
           <div className="looks">{THEMES.map(([k, t, d]) => (
             <button key={k} aria-pressed={theme === k} className={theme === k ? "look on" : "look"} onClick={() => setTheme(k)}>
               <div className={"thumb " + k}><i className="tb" /><i className="tc" /><i className="tc" /></div>
@@ -492,7 +491,7 @@ export default function App() {
     if (id) openCourseById(id); else api.openWeb(u.toString());
   };
   const pick = async () => { const p = await open({ directory: true, title: "Choose download folder" }); if (typeof p === "string") { localStorage.setItem("dlDir", p); setDir(p); return p; } return null; };
-  const ensureDir = async () => dir ?? "";   // no prompt here: choose the folder in Settings (default: Downloads/MoodleDesk)
+  const ensureDir = async () => dir ?? "";   // no prompt here: choose the folder in Settings (default: Downloads/Zenith)
   const resetDir = () => { localStorage.removeItem("dlDir"); setDir(null); };
 
   const signOut = () => api.logout().then(() => { clear(); refresh(); });
@@ -504,7 +503,7 @@ export default function App() {
   return (
     <div className="app">
       <aside>
-        <div className="brand"><div className="logo sm">M</div>MoodleDesk</div>
+        <div className="brand">Zenith</div>
         <nav>
           <button className={!explore && !settingsOpen ? "on" : ""} onClick={() => { setExplore(false); setSettingsOpen(false); clear(); }}><Icon n="book" />My courses</button>
           <button className={explore ? "on" : ""} onClick={() => { setExplore(true); setSettingsOpen(false); clear(); }}><Icon n="search" />Explore</button>
@@ -554,7 +553,7 @@ export default function App() {
       </main>
       {update && (
         <div className="update">
-          <div className="grow"><b>MoodleDesk {update.version} is available</b><small>A newer version has been released.</small></div>
+          <div className="grow"><b>Zenith {update.version} is available</b><small>A newer version has been released.</small></div>
           <button className="primary sm" onClick={() => api.openExternal(update.url)}>Download</button>
           <button className="icon" title="Skip this version" onClick={() => { localStorage.setItem("skipVersion", update.version); setUpdate(null); }}><Icon n="x" /></button>
         </div>)}

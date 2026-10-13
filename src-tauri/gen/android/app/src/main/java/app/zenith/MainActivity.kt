@@ -1,4 +1,4 @@
-package app.moodledesk
+package app.zenith
 
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge

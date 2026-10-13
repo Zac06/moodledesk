@@ -11,7 +11,7 @@ use tauri_plugin_android_native::AndroidNativeExt;
 use tauri_plugin_ios_native::IosNativeExt;
 
 const SERVICE: &str = "moodle_mobile_app";
-const SCHEME: &str = "moodledesk";
+const SCHEME: &str = "zenith";
 
 #[derive(Clone, Serialize, Deserialize)]
 struct Session {
@@ -32,7 +32,7 @@ struct AppState {
 mod secret {
     use tauri::AppHandle;
     fn entry() -> Result<keyring::Entry, String> {
-        keyring::Entry::new("moodledesk", "session").map_err(|e| e.to_string())
+        keyring::Entry::new("zenith", "session").map_err(|e| e.to_string())
     }
     pub fn set(_: &AppHandle, v: &str) {
         if let Ok(e) = entry() {
@@ -131,7 +131,7 @@ async fn resolve_site(input: String) -> Result<Value, String> {
     require_https(&site)?;
     let body = serde_json::json!([{ "index": 0, "methodname": "tool_mobile_get_public_config", "args": {} }]);
     let client = reqwest::Client::builder()
-        .user_agent("MoodleDesk/0.1 (MoodleMobile)")
+        .user_agent("Zenith/0.2")
         .build()
         .map_err(|e| e.to_string())?;
     let resp = client
@@ -426,11 +426,11 @@ fn default_dir(app: &AppHandle) -> Result<std::path::PathBuf, String> {
     let (base, name) = if cfg!(mobile) {
         (app.path().app_data_dir(), "downloads")
     } else {
-        (app.path().download_dir().or_else(|_| app.path().home_dir()), "MoodleDesk")
+        (app.path().download_dir().or_else(|_| app.path().home_dir()), "Zenith")
     };
     base.map(|p| p.join(name)).map_err(|e| e.to_string())
 }
-/// `moodledesk --screenshot`: the UI shows invented courses and a made-up user instead of the real account.
+/// `zenith --screenshot`: the UI shows invented courses and a made-up user instead of the real account.
 #[tauri::command]
 fn screenshot_mode() -> bool {
     std::env::args().any(|a| a == "--screenshot")
@@ -476,7 +476,7 @@ async fn download_file(
             .trim()
             .to_string()
     };
-    // empty dir = the default folder (system Downloads/MoodleDesk); the folder is chosen in Settings only
+    // empty dir = the default folder (system Downloads/Zenith); the folder is chosen in Settings only
     let mut path = if dir.trim().is_empty() {
         default_dir(&app)?
     } else {
@@ -638,9 +638,9 @@ async fn open_authed(
     if same_origin(&s.site, &url) && !recent {
         if let Some(pt) = s.private_token.clone() {
             let res: Result<String, String> = async {
-                // Moodle only issues auto-login keys to requests that identify as its app (errorcode apprequired)
+                // Moodle only issues auto-login keys to requests that identify as its app (errorcode apprequired), so this one call keeps the MoodleMobile token
                 let client = reqwest::Client::builder()
-                    .user_agent("MoodleMobile MoodleDesk/0.1")
+                    .user_agent("Zenith/0.2 MoodleMobile")
                     .build()
                     .map_err(|e| e.to_string())?;
                 let endpoint = format!("{}/webservice/rest/server.php", s.site);
@@ -734,10 +734,10 @@ async fn check_update(app: AppHandle) -> Result<Option<UpdateInfo>, String> {
         return Ok(None); // the app store updates the app; Google Play and the App Store do not allow pointing users elsewhere
     }
     let v: Value = reqwest::Client::builder()
-        .user_agent("MoodleDesk-update-check")
+        .user_agent("Zenith-update-check")
         .build()
         .map_err(|e| e.to_string())?
-        .get("https://api.github.com/repos/zac06/moodledesk/releases/latest")
+        .get("https://api.github.com/repos/zac06/zenith/releases/latest")
         .header("Accept", "application/vnd.github+json")
         .send()
         .await
@@ -754,7 +754,7 @@ async fn check_update(app: AppHandle) -> Result<Option<UpdateInfo>, String> {
             version: tag.trim_start_matches('v').to_string(),
             url: v["html_url"]
                 .as_str()
-                .unwrap_or("https://github.com/zac06/moodledesk/releases/latest")
+                .unwrap_or("https://github.com/zac06/zenith/releases/latest")
                 .to_string(),
             notes: v["body"].as_str().unwrap_or("").chars().take(400).collect(),
         }))
@@ -800,7 +800,7 @@ pub fn run() {
         .manage(AppState::default())
         .setup(|app| {
             #[cfg(any(windows, target_os = "linux"))]
-            app.deep_link().register_all()?; // registers moodledesk:// at runtime (dev + portable builds)
+            app.deep_link().register_all()?; // registers zenith:// at runtime (dev + portable builds)
             let handle = app.handle().clone();
             // If the system closed the app during the browser login, the link that comes back starts it from scratch, and
             // that first link is not delivered as an event: ask for it (before the page loads, so it sees the new login).
@@ -841,7 +841,7 @@ pub fn run() {
             open_local
         ])
         .run(tauri::generate_context!())
-        .expect("error while running MoodleDesk");
+        .expect("error while running Zenith");
 }
 
 #[cfg(test)]
@@ -859,7 +859,7 @@ mod tests {
     }
     #[test]
     fn pending_login_survives_a_restart() {
-        let dir = std::env::temp_dir().join(format!("moodledesk-test-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("zenith-test-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         assert_eq!(take_pending(&dir), None); // nothing started yet
         save_pending(&dir, "https://moodle.uni.edu/mycampus", "abc123").unwrap();

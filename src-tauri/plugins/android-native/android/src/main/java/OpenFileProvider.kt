@@ -1,4 +1,4 @@
-package app.moodledesk.androidnative
+package app.zenith.androidnative
 
 import androidx.core.content.FileProvider
 

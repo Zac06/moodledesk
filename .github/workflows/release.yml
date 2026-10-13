@@ -39,7 +39,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: "MoodleDesk ${{ github.ref_name }}"
+          releaseName: "Zenith ${{ github.ref_name }}"
           releaseDraft: true
           args: ${{ matrix.args }}
 
@@ -79,9 +79,9 @@ jobs:
           } > src-tauri/gen/android/keystore.properties
       - run: npm run tauri android build -- --apk --target aarch64 --target armv7
       - name: Name the APK
-        run: cp src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk "MoodleDesk_${{ github.ref_name }}.apk"
+        run: cp src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk "Zenith_${{ github.ref_name }}.apk"
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           draft: true
-          files: MoodleDesk_${{ github.ref_name }}.apk
+          files: Zenith_${{ github.ref_name }}.apk

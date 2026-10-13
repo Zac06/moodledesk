@@ -1,27 +1,27 @@
-<img src="docs/icon.png" width="96" alt="MoodleDesk logo">
+<img src="docs/icon.png" width="96" alt="Zenith logo">
 
-# MoodleDesk
+# Zenith
 
-A native, cross-platform client for [Moodle](https://moodle.org) on the desktop and on Android, built with [Tauri v2](https://tauri.app) and React. It talks to your institution's Moodle through the official mobile web service API, so it has its own UI. It is NOT a browser wrapper around the Moodle website.
+A native, cross-platform client for the [Moodle™](https://moodle.org) platform on the desktop and on Android, built with [Tauri v2](https://tauri.app) and React. It talks to your institution's Moodle through the official mobile web service API, so it has its own UI. It is NOT a browser wrapper around the Moodle website.
 
 Runs on **Linux, Windows, macOS and Android**. iOS is not supported yet (see [`MOBILE.md`](MOBILE.md)).
 
-Download page: <https://zac06.github.io/moodledesk/> (source in [`docs/`](docs), published with GitHub Pages).
+Download page: <https://zac06.github.io/zenith/> (source in [`docs/`](docs), published with GitHub Pages).
 
 ## Screenshots
 
-![MoodleDesk on a laptop and on an Android phone](docs/mockup.png)
+![Zenith on a laptop and on an Android phone](docs/mockup.png)
 
 ## Features
 
 - **Connect to any Moodle site** by entering its address.
-- **Single sign-on (SSO)**: the login opens your institution's own login page in the system browser (Shibboleth, CAS, SAML, OAuth2, Microsoft/Google...). The app then receives the session token through a `moodledesk://` deep link. Sites that use plain username/password login are supported too.
+- **Single sign-on (SSO)**: the login opens your institution's own login page in the system browser (Shibboleth, CAS, SAML, OAuth2, Microsoft/Google...). The app then receives the session token through a `zenith://` deep link. Sites that use plain username/password login are supported too.
 - **Courses** with filters (All, In progress, Future, Ended, Favourites, Hidden), search, progress bars, course images (with a generated gradient fallback), and a per-card menu to favourite, hide or unhide a course.
 - **Course contents**: sections, resources, folders and links.
 - **Assignments**: assignments in a course show their due date. Open one for the description, attachments, submission status and grade. Submitting happens in the browser.
 - **Explore**: search all courses on the site by course name, department and teacher, and self-enrol (with an enrolment key if required). Other enrolment methods are finished in the browser.
-- **Downloads**: files are saved to `Downloads/MoodleDesk` (or a folder you choose in Settings), organised by course, and opened with the system default application. On Android they stay in the app's own storage and open in the app you pick. You choose whether to re-download only when Moodle's copy is newer (default), always reuse the saved copy, or always download again.
-- **Settings**: theme (system, light, dark), high contrast, download folder and behaviour, and a list of the files MoodleDesk saved, which you can delete per file, per course or all at once.
+- **Downloads**: files are saved to `Downloads/Zenith` (or a folder you choose in Settings), organised by course, and opened with the system default application. On Android they stay in the app's own storage and open in the app you pick. You choose whether to re-download only when Moodle's copy is newer (default), always reuse the saved copy, or always download again.
+- **Settings**: theme (system, light, dark), high contrast, download folder and behaviour, and a list of the files Zenith saved, which you can delete per file, per course or all at once.
 - **Links**: course links open inside the app; other links open in your browser, already logged in when the site allows it.
 - **Update notice** (desktop): the app checks GitHub for a newer release and shows a banner with a download link. On Android, download the newer `.apk` from the releases page and install it over the old one.
 - **Android**: the same app on phones and tablets, with a bottom navigation bar on phones, the Android back button, and a launcher icon that matches the desktop app.
@@ -36,7 +36,7 @@ React UI  --invoke-->  Rust (Tauri commands)  --HTTPS-->  Moodle web service API
 
 - All Moodle web-service and download requests run in Rust (`reqwest`), so there are no CORS problems. The UI does hold the session token in memory, only to load course images, and it is only ever attached to URLs on your Moodle site itself, never to another host. Downloads and browser auto-login are refused for any URL outside the site's scheme, host and port.
 - **Site discovery:** `tool_mobile_get_public_config` (via `lib/ajax/service-nologin.php`) reports whether the site uses password login or browser SSO.
-- **SSO flow:** the app opens `/admin/tool/mobile/launch.php?service=moodle_mobile_app&passport=…&urlscheme=moodledesk`. After login, Moodle redirects to `moodledesk://token=<base64>`. The app checks the `md5(site + passport)` value and stores the token.
+- **SSO flow:** the app opens `/admin/tool/mobile/launch.php?service=moodle_mobile_app&passport=…&urlscheme=zenith`. After login, Moodle redirects to `zenith://token=<base64>`. The app checks the `md5(site + passport)` value and stores the token.
 - **Data:** `core_webservice_get_site_info`, `core_course_get_enrolled_courses_by_timeline_classification`, `core_course_get_contents`, `core_course_set_favourite_courses`, user preferences for hiding courses, and for Explore `core_course_search_courses`, `core_course_get_courses_by_field`, `core_course_get_categories`, `core_enrol_get_course_enrolment_methods`, `core_enrol_get_users_courses` `enrol_self_enrol_user`, and for assignments `mod_assign_get_assignments` and `mod_assign_get_submission_status`. Opening a link logged in uses `tool_mobile_get_autologin_key`.
 
 ## Requirements on the Moodle side
@@ -66,7 +66,7 @@ npm run tauri dev
 
 The first Rust build takes several minutes. Later builds are incremental.
 
-> **Note:** the `moodledesk://` deep link is registered at runtime on Linux and Windows. On macOS it only works from a bundled `.app`, so test SSO with a real build there.
+> **Note:** the `zenith://` deep link is registered at runtime on Linux and Windows. On macOS it only works from a bundled `.app`, so test SSO with a real build there.
 
 ### Icons
 
@@ -78,7 +78,7 @@ npx tauri icon path/to/icon.png
 
 ### Screenshot mode
 
-`moodledesk --screenshot` shows invented course names, teachers and a made-up username (different on each launch) instead of your account, so you can take screenshots without exposing real data. It sends nothing to any Moodle site and never reads or changes your saved login. Close any running MoodleDesk window first, because a second launch hands its arguments to the first instance instead of starting a new one. In development, npm swallows the first `--`, and the Tauri CLI needs two more (the first ends its own options, the second starts the app's): `npm run tauri dev -- -- -- --screenshot`.
+`zenith --screenshot` shows invented course names, teachers and a made-up username (different on each launch) instead of your account, so you can take screenshots without exposing real data. It sends nothing to any Moodle site and never reads or changes your saved login. Close any running Zenith window first, because a second launch hands its arguments to the first instance instead of starting a new one. In development, npm swallows the first `--`, and the Tauri CLI needs two more (the first ends its own options, the second starts the app's): `npm run tauri dev -- -- -- --screenshot`.
 
 ## Building
 
@@ -115,14 +115,14 @@ The workflow in `.github/workflows/release.yml` uses [`tauri-apps/tauri-action`]
 git tag v0.1.0 && git push origin v0.1.0
 ```
 
-The same workflow also builds the Android APK (job `android`), signs it with the key stored in the repository secrets and attaches it to the same draft release, named `MoodleDesk_<tag>.apk`. The secrets it needs are listed in [`MOBILE.md`](MOBILE.md).
+The same workflow also builds the Android APK (job `android`), signs it with the key stored in the repository secrets and attaches it to the same draft release, named `Zenith_<tag>.apk`. The secrets it needs are listed in [`MOBILE.md`](MOBILE.md).
 
 Unsigned builds trigger warnings (Windows SmartScreen, macOS Gatekeeper). Distributing without warnings requires code signing, and notarization on macOS.
 
 ## Project structure
 
 ```
-moodledesk/
+zenith/
 ├─ .github/workflows/      release build for Linux, Windows, macOS and Android
 ├─ docs/                   download website (GitHub Pages), logo and screenshots
 ├─ MOBILE.md               Android build, signing, iOS status
@@ -154,8 +154,8 @@ moodledesk/
 | `login_password`         | Username/password login through `login/token.php`           |
 | `ws_call`                | Generic Moodle web-service call                             |
 | `download_file`          | Download a file (token added in Rust), then open it         |
-| `list_downloads` / `delete_downloads` | List or delete the files MoodleDesk saved      |
-| `default_download_dir`   | Default folder (`Downloads/MoodleDesk`; the app's own storage on Android) |
+| `list_downloads` / `delete_downloads` | List or delete the files Zenith saved      |
+| `default_download_dir`   | Default folder (`Downloads/Zenith`; the app's own storage on Android) |
 | `is_mobile`              | Lets the UI hide what a phone cannot do                     |
 | `open_local` / `open_external` | Open a saved file or a web link with the system default |
 | `open_authed`            | Open a site URL in the browser, logged in via auto-login key |
@@ -184,3 +184,9 @@ Assignments and deadlines, dashboard with upcoming events, forums, grades, downl
 ## License
 
 GNU General Public License v3.0. See [LICENSE](LICENSE).
+
+## Trademarks
+
+Zenith is an independent project. It is not affiliated with, endorsed by or sponsored by Moodle.
+
+The word Moodle and associated Moodle logos are trademarks or registered trademarks of Moodle Pty Ltd or its related affiliates.

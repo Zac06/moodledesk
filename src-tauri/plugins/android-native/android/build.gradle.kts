@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "app.moodledesk.androidnative"
+    namespace = "app.zenith.androidnative"
     compileSdk = 36
 
     defaultConfig {

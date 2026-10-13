@@ -1,4 +1,4 @@
-package app.moodledesk.androidnative
+package app.zenith.androidnative
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
@@ -34,7 +34,7 @@ class ValueArg {
 
 @TauriPlugin
 class AndroidNativePlugin(private val activity: Activity) : Plugin(activity) {
-    private val prefs get() = activity.getSharedPreferences("moodledesk_secrets", Context.MODE_PRIVATE)
+    private val prefs get() = activity.getSharedPreferences("zenith_secrets", Context.MODE_PRIVATE)
 
     /** Opens a downloaded file with the app the user picks. */
     @Command
@@ -108,7 +108,7 @@ class AndroidNativePlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     private companion object {
-        const val KEY_ALIAS = "moodledesk_session"
+        const val KEY_ALIAS = "zenith_session"
         const val CIPHER = "AES/GCM/NoPadding"
         const val PREF = "session"
         const val IV_SIZE = 12

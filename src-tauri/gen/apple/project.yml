@@ -1,6 +1,6 @@
-name: moodledesk
+name: zenith
 options:
-  bundleIdPrefix: app.moodledesk
+  bundleIdPrefix: app.zenith
   deploymentTarget:
     iOS: 15.0
 fileGroups: [../../src]
@@ -10,8 +10,8 @@ configs:
 settingGroups:
   app:
     base:
-      PRODUCT_NAME: MoodleDesk
-      PRODUCT_BUNDLE_IDENTIFIER: app.moodledesk
+      PRODUCT_NAME: Zenith
+      PRODUCT_BUNDLE_IDENTIFIER: app.zenith
 targetTemplates:
   app:
     type: application
@@ -24,7 +24,7 @@ targetTemplates:
     settings:
       groups: [app]
 targets:
-  moodledesk_iOS:
+  zenith_iOS:
     type: application
     platform: iOS
     sources:
@@ -36,13 +36,13 @@ targets:
       # via LIBRARY_SEARCH_PATHS, never bundled as resources.
       - path: Externals
         excludes: ["**/*.a"]
-      - path: moodledesk_iOS
+      - path: zenith_iOS
       - path: assets
         buildPhase: resources
         type: folder
       - path: LaunchScreen.storyboard
     info:
-      path: moodledesk_iOS/Info.plist
+      path: zenith_iOS/Info.plist
       properties:
         LSRequiresIPhoneOS: true
         UILaunchStoryboardName: LaunchScreen
@@ -59,7 +59,7 @@ targets:
         CFBundleShortVersionString: 0.1.8
         CFBundleVersion: "0.1.8"
     entitlements:
-      path: moodledesk_iOS/moodledesk_iOS.entitlements
+      path: zenith_iOS/zenith_iOS.entitlements
     scheme:
       environmentVariables:
         RUST_BACKTRACE: full

@@ -1,7 +1,7 @@
 import { invoke as real } from "@tauri-apps/api/core";
 import { fake } from "./demo";
 
-// `moodledesk --screenshot`: every call is answered with invented data (see demo.ts)
+// `zenith --screenshot`: every call is answered with invented data (see demo.ts)
 let demo = false;
 export const init = () => Promise.all([real<boolean>("screenshot_mode"), real<boolean>("is_mobile")])
   .then(([d, m]) => { demo = d; if (m) document.documentElement.dataset.mobile = ""; }).catch(() => {});

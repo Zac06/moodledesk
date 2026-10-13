@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "302988A6FB1C24AD294C96C8"
-               BuildableName = "moodledesk_iOS.app"
-               BlueprintName = "moodledesk_iOS"
-               ReferencedContainer = "container:moodledesk.xcodeproj">
+               BuildableName = "zenith_iOS.app"
+               BlueprintName = "zenith_iOS"
+               ReferencedContainer = "container:zenith.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "302988A6FB1C24AD294C96C8"
-            BuildableName = "moodledesk_iOS.app"
-            BlueprintName = "moodledesk_iOS"
-            ReferencedContainer = "container:moodledesk.xcodeproj">
+            BuildableName = "zenith_iOS.app"
+            BlueprintName = "zenith_iOS"
+            ReferencedContainer = "container:zenith.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -70,9 +70,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "302988A6FB1C24AD294C96C8"
-            BuildableName = "moodledesk_iOS.app"
-            BlueprintName = "moodledesk_iOS"
-            ReferencedContainer = "container:moodledesk.xcodeproj">
+            BuildableName = "zenith_iOS.app"
+            BlueprintName = "zenith_iOS"
+            ReferencedContainer = "container:zenith.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -101,9 +101,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "302988A6FB1C24AD294C96C8"
-            BuildableName = "moodledesk_iOS.app"
-            BlueprintName = "moodledesk_iOS"
-            ReferencedContainer = "container:moodledesk.xcodeproj">
+            BuildableName = "zenith_iOS.app"
+            BlueprintName = "zenith_iOS"
+            ReferencedContainer = "container:zenith.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>

@@ -25,10 +25,10 @@ val keystoreProperties = Properties().apply {
 
 android {
     compileSdk = 37
-    namespace = "app.moodledesk"
+    namespace = "app.zenith"
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "false"
-        applicationId = "app.moodledesk"
+        applicationId = "app.zenith"
         minSdk = 24
         targetSdk = 37
         versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()

@@ -26,9 +26,9 @@
 		1D637761A3654BD69AF55AC6 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		25CA2897B3614559ADA247E3 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		2713285772ED2AEAFAC830D6 /* lib.rs */ = {isa = PBXFileReference; path = lib.rs; sourceTree = "<group>"; };
-		370EA86AED71EB3F9245B2B0 /* moodledesk_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = moodledesk_iOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		370EA86AED71EB3F9245B2B0 /* zenith_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = zenith_iOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		42CC3A0914D5D80E5B066C9F /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
-		45D0EDBA32033AC3904D65EC /* moodledesk_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = moodledesk_iOS.entitlements; sourceTree = "<group>"; };
+		45D0EDBA32033AC3904D65EC /* zenith_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = zenith_iOS.entitlements; sourceTree = "<group>"; };
 		49259F10FE5FF6806FFF11AA /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		49903A21E87B69B0A0B84F5F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		6F920E091A427C8541603EBD /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
@@ -79,7 +79,7 @@
 		2F1FDDA3CB8E11FA1ED05F27 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				BAC62EA804F3DC07285C1D90 /* moodledesk */,
+				BAC62EA804F3DC07285C1D90 /* zenith */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -104,27 +104,27 @@
 		69A2A0D99DF2EBA29C7B6FAB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				370EA86AED71EB3F9245B2B0 /* moodledesk_iOS.app */,
+				370EA86AED71EB3F9245B2B0 /* zenith_iOS.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		999A910E066658708592EB54 /* moodledesk_iOS */ = {
+		999A910E066658708592EB54 /* zenith_iOS */ = {
 			isa = PBXGroup;
 			children = (
 				49903A21E87B69B0A0B84F5F /* Info.plist */,
-				45D0EDBA32033AC3904D65EC /* moodledesk_iOS.entitlements */,
+				45D0EDBA32033AC3904D65EC /* zenith_iOS.entitlements */,
 			);
-			path = moodledesk_iOS;
+			path = zenith_iOS;
 			sourceTree = "<group>";
 		};
-		BAC62EA804F3DC07285C1D90 /* moodledesk */ = {
+		BAC62EA804F3DC07285C1D90 /* zenith */ = {
 			isa = PBXGroup;
 			children = (
 				788EF8978B1DB13FB05C4350 /* main.mm */,
 				E4C21F3E9F5DFC7C48798300 /* bindings */,
 			);
-			path = moodledesk;
+			path = zenith;
 			sourceTree = "<group>";
 		};
 		BC2828C96C50BA59B7686EF3 = {
@@ -134,7 +134,7 @@
 				A531B9FB515F4E45C90D9181 /* Assets.xcassets */,
 				FAD8E1F1CBA002E4531FF9B8 /* LaunchScreen.storyboard */,
 				5ECC4BB700DE7470E4C04A50 /* Externals */,
-				999A910E066658708592EB54 /* moodledesk_iOS */,
+				999A910E066658708592EB54 /* zenith_iOS */,
 				2F1FDDA3CB8E11FA1ED05F27 /* Sources */,
 				3A4BA18FDC49C7C9DF0DFBF6 /* src */,
 				0C2CB3AC2BD5197E16803367 /* Frameworks */,
@@ -153,9 +153,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		302988A6FB1C24AD294C96C8 /* moodledesk_iOS */ = {
+		302988A6FB1C24AD294C96C8 /* zenith_iOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 95E389BF24E7D1C07EAC3E82 /* Build configuration list for PBXNativeTarget "moodledesk_iOS" */;
+			buildConfigurationList = 95E389BF24E7D1C07EAC3E82 /* Build configuration list for PBXNativeTarget "zenith_iOS" */;
 			buildPhases = (
 				F06B3E52F7C07946B04D89B7 /* Build Rust Code */,
 				254EA0A8DBFE5E7164BBF87E /* Sources */,
@@ -166,11 +166,11 @@
 			);
 			dependencies = (
 			);
-			name = moodledesk_iOS;
+			name = zenith_iOS;
 			packageProductDependencies = (
 			);
-			productName = moodledesk_iOS;
-			productReference = 370EA86AED71EB3F9245B2B0 /* moodledesk_iOS.app */;
+			productName = zenith_iOS;
+			productReference = 370EA86AED71EB3F9245B2B0 /* zenith_iOS.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -184,7 +184,7 @@
 				TargetAttributes = {
 				};
 			};
-			buildConfigurationList = CB4B65367D39C12B0D6E8E54 /* Build configuration list for PBXProject "moodledesk" */;
+			buildConfigurationList = CB4B65367D39C12B0D6E8E54 /* Build configuration list for PBXProject "zenith" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -198,7 +198,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				302988A6FB1C24AD294C96C8 /* moodledesk_iOS */,
+				302988A6FB1C24AD294C96C8 /* zenith_iOS */,
 			);
 		};
 /* End PBXProject section */
@@ -317,7 +317,7 @@
 					x86_64,
 				);
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = moodledesk_iOS/moodledesk_iOS.entitlements;
+				CODE_SIGN_ENTITLEMENTS = zenith_iOS/zenith_iOS.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
@@ -325,15 +325,15 @@
 					"$(inherited)",
 					"\".\"",
 				);
-				INFOPLIST_FILE = moodledesk_iOS/Info.plist;
+				INFOPLIST_FILE = zenith_iOS/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
 				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = app.moodledesk;
-				PRODUCT_NAME = "MoodleDesk";
+				PRODUCT_BUNDLE_IDENTIFIER = app.zenith;
+				PRODUCT_NAME = "Zenith";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = "arm64  x86_64";
@@ -349,7 +349,7 @@
 					x86_64,
 				);
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = moodledesk_iOS/moodledesk_iOS.entitlements;
+				CODE_SIGN_ENTITLEMENTS = zenith_iOS/zenith_iOS.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
@@ -357,15 +357,15 @@
 					"$(inherited)",
 					"\".\"",
 				);
-				INFOPLIST_FILE = moodledesk_iOS/Info.plist;
+				INFOPLIST_FILE = zenith_iOS/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
 				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = app.moodledesk;
-				PRODUCT_NAME = "MoodleDesk";
+				PRODUCT_BUNDLE_IDENTIFIER = app.zenith;
+				PRODUCT_NAME = "Zenith";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = "arm64  x86_64";
@@ -438,7 +438,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		95E389BF24E7D1C07EAC3E82 /* Build configuration list for PBXNativeTarget "moodledesk_iOS" */ = {
+		95E389BF24E7D1C07EAC3E82 /* Build configuration list for PBXNativeTarget "zenith_iOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9C4846CC696AD5AC9F751DF5 /* debug */,
@@ -447,7 +447,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = debug;
 		};
-		CB4B65367D39C12B0D6E8E54 /* Build configuration list for PBXProject "moodledesk" */ = {
+		CB4B65367D39C12B0D6E8E54 /* Build configuration list for PBXProject "zenith" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D250404E04FDB14B857D631D /* debug */,

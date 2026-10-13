@@ -1,6 +1,6 @@
 # Privacy
 
-MoodleDesk runs on your computer. It has no accounts, no analytics, no crash reporting and no servers of its own, and nothing is sent to the developer. We do not collect your data.
+Zenith runs on your computer. It has no accounts, no analytics, no crash reporting and no servers of its own, and nothing is sent to the developer. We do not collect your data.
 
 **What it stores on your computer**
 - Your Moodle login token, in the system keychain.
@@ -13,4 +13,4 @@ MoodleDesk runs on your computer. It has no accounts, no analytics, no crash rep
 - **Images in course text** are shown only if they come from your Moodle site, so a teacher's pasted picture from another website is not loaded and cannot reveal your IP address. Cover images use the address your Moodle site provides.
 - **Links** you click open in your browser. After that, the other website's own policy applies.
 
-Questions or problems: open an issue at https://github.com/zac06/moodledesk/issues.
+Questions or problems: open an issue at https://github.com/zac06/zenith/issues.
